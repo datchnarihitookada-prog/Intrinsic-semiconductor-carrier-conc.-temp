@@ -45,9 +45,9 @@ n_points = density_to_points(ni)
 fig, ax = plt.subplots(figsize=(4.8, 6.8))
 
 # バンド端とフェルミ準位
-ax.plot([0, 1], [Ec, Ec], linewidth=2, label="_nolegend_")
-ax.plot([0, 1], [Ev, Ev], linewidth=2, label="_nolegend_")
-ax.plot([0, 1], [Ef, Ef], linestyle="--", linewidth=2, label="_nolegend_")
+ax.plot([0, 1], [Ec, Ec], linewidth=2, color="blue", label="_nolegend_")
+ax.plot([0, 1], [Ev, Ev], linewidth=2, color="red", label="_nolegend_")
+ax.plot([0, 1], [Ef, Ef], linestyle="--", color="black", linewidth=2, label="_nolegend_")
 
 # 電子
 if n_points > 0:
