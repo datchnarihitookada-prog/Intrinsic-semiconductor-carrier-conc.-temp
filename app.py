@@ -21,42 +21,54 @@ def density_to_points(n):
 def sample_conduction(T, n_points):
     scale = k_B * T
     dE = np.random.exponential(scale=scale, size=n_points)
-    return Ec + dE
+    y = Ec + dE
+    return np.clip(y, Ec, 1.45)
 
 def sample_valence(T, n_points):
     scale = k_B * T
     dE = np.random.exponential(scale=scale, size=n_points)
-    return Ev - dE
+    y = Ev - dE
+    return np.clip(y, -1.45, Ev)
 
 st.title("Intrinsic Semiconductor Visualization")
 
-T = st.slider("Temperature (K)", 50, 1000, 300, step=50)
+T = st.slider("Temperature (K)", 50, 1000, 300, step=10)
 
 ni = intrinsic_density(T)
 n_points = density_to_points(ni)
 
-fig, ax = plt.subplots(figsize=(4, 6))
+fig, ax = plt.subplots(figsize=(4.8, 6.8))
 
-ax.plot([0, 1], [Ec, Ec])
-ax.plot([0, 1], [Ev, Ev])
-ax.plot([0, 1], [Ef, Ef], linestyle="--")
+# バンド端とフェルミ準位
+ax.plot([0, 1], [Ec, Ec], linewidth=2, label="_nolegend_")
+ax.plot([0, 1], [Ev, Ev], linewidth=2, label="_nolegend_")
+ax.plot([0, 1], [Ef, Ef], linestyle="--", linewidth=2, label="_nolegend_")
 
+# 電子
 if n_points > 0:
     y_e = sample_conduction(T, n_points)
     x_e = np.random.uniform(0.2, 0.8, size=n_points)
-    ax.scatter(x_e, y_e, s=10, label="Electrons")
+    ax.scatter(x_e, y_e, s=28, label="Electrons")
 
+# 正孔
 if n_points > 0:
     y_h = sample_valence(T, n_points)
     x_h = np.random.uniform(0.2, 0.8, size=n_points)
-    ax.scatter(x_h, y_h, s=10, label="Holes")
+    ax.scatter(x_h, y_h, s=28, label="Holes")
 
+# 軸・表示
 ax.set_xlim(0, 1)
 ax.set_ylim(-1.5, 1.5)
 ax.set_xticks([])
 ax.set_ylabel("Energy (eV)")
-ax.set_title(f"T = {T} K, ni ≈ {ni:.2e} cm^-3")
-ax.legend()
+ax.set_title(f"T = {T} K, ni ≈ {ni:.2e} cm⁻³")
+
+# Ec, Ev, Ef ラベル
+ax.text(1.02, Ec, "Ec", va="center", ha="left", fontsize=12)
+ax.text(1.02, Ev, "Ev", va="center", ha="left", fontsize=12)
+ax.text(1.02, Ef, "Ef", va="center", ha="left", fontsize=12)
+
+ax.legend(loc="upper right")
+plt.tight_layout()
 
 st.pyplot(fig)
-
