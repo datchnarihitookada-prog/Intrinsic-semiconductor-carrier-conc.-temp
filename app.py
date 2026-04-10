@@ -76,9 +76,9 @@ ax.set_ylabel("Energy (eV)")
 ax.set_title(f"T = {T} K, ni ≈ {ni:.2e} cm⁻³")
 
 # Ec, Ev, Ef ラベル
-ax.text(1.02, Ec, "Ec", va="center", ha="left", fontsize=12)
-ax.text(1.02, Ev, "Ev", va="center", ha="left", fontsize=12)
-ax.text(1.02, Ef, "Ef", va="center", ha="left", fontsize=12)
+ax.text(1.02, Ec, "Ec", va="center", color="blue", ha="left", fontsize=12)
+ax.text(1.02, Ev, "Ev", va="center", color="red", ha="left", fontsize=12)
+ax.text(1.02, Ef, "Ef", va="center", color="black", ha="left", fontsize=12)
 
 ax.legend(loc="upper right")
 plt.tight_layout()
