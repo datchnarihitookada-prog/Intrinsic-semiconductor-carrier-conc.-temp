@@ -53,13 +53,20 @@ ax.plot([0, 1], [Ef, Ef], linestyle="--", linewidth=2, label="_nolegend_")
 if n_points > 0:
     y_e = sample_conduction(T, n_points)
     x_e = np.random.uniform(0.2, 0.8, size=n_points)
-    ax.scatter(x_e, y_e, s=28, label="Electrons")
+    ax.scatter(x_e, y_e, s=28, color="blue", label="Electrons")
 
 # 正孔
 if n_points > 0:
     y_h = sample_valence(T, n_points)
     x_h = np.random.uniform(0.2, 0.8, size=n_points)
-    ax.scatter(x_h, y_h, s=28, label="Holes")
+    ax.scatter(
+    x_h, y_h,
+    s=40,
+    facecolors="white",   # 中を白
+    edgecolors="red",     # 枠を赤
+    linewidths=1.5,
+    label="Holes"
+)
 
 # 軸・表示
 ax.set_xlim(0, 1)
