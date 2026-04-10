@@ -32,7 +32,7 @@ def sample_valence(T, n_points):
 
 st.title("Intrinsic Semiconductor Visualization")
 
-T = st.slider("Temperature (K)", 50, 1000, 300, step=10)
+T = st.slider("Temperature (K)", 50, 1000, 300, step=5)
 
 ni = intrinsic_density(T)
 n_points = density_to_points(ni)
