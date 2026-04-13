@@ -13,11 +13,9 @@ Nv = 1.04e19     # cm^-3
 
 Ec = Eg / 2
 Ev = -Eg / 2
+E_D = Ec - 0.045   # ドナー準位
 
-# ドナー準位（Ec の少し下）
-E_D = Ec - 0.045  # eV
-
-# 表示用の個数
+# 表示用個数
 N_DONOR_DISPLAY = 30
 N_INTRINSIC_MAX_DISPLAY = 30
 
@@ -31,57 +29,60 @@ def intrinsic_density(T):
     return np.sqrt(Nc * Nv) * np.exp(-Eg / (2 * k_B * T))
 
 
-def donor_ionized_fraction(T, E_ion):
+def donor_ionized_fraction(T):
     """
-    ドナー準位 -> 伝導帯 への励起割合の簡易モデル
-    0 K で 0、温度上昇で 1 に近づく
+    教育用の簡易モデル
+    低温では未電離、室温付近ではほぼ完全電離になるように設定
     """
     if T <= 0:
         return 0.0
-    return np.exp(-E_ion / (k_B * T))
+
+    # 代表温度と立ち上がり幅
+    T0 = 120.0   # K
+    dT = 18.0    # K
+
+    frac = 1.0 / (1.0 + np.exp(-(T - T0) / dT))
+    return float(np.clip(frac, 0.0, 1.0))
 
 
-def intrinsic_switch(frac_donor, threshold=0.98):
+def intrinsic_fraction(T, ND):
     """
-    ドナー電子がほぼ出尽くしてからだけ
-    真性励起を表示するためのスイッチ
+    真性領域への移行の強さ
+    ni << ND では 0 に近く、ni >> ND で 1 に近づく
     """
-    if frac_donor <= threshold:
+    if T <= 0:
         return 0.0
-    # threshold～1 の間で 0→1 にする
-    return min(1.0, (frac_donor - threshold) / (1.0 - threshold))
+
+    ni = intrinsic_density(T)
+    if ni <= 0:
+        return 0.0
+
+    r = ni / ND
+
+    # ni/ND が 10^-2 以下ではほぼ見せない
+    # ni/ND が 1 以上でかなり強く出す
+    x = np.log10(max(r, 1e-30))
+    x0 = -0.5   # 遷移中心
+    dx = 0.35   # 立ち上がり幅
+    frac = 1.0 / (1.0 + np.exp(-(x - x0) / dx))
+    return float(np.clip(frac, 0.0, 1.0))
 
 
 def carrier_density_n_type(T, ND):
     """
-    表示用3段階モデル
-
-    1) ドナー準位に電子がいる
-    2) ドナー準位 -> 伝導帯 に励起
-    3) ドナーがほぼ空になってから Ev -> Ec の真性励起
-
-    戻り値:
-      ni
-      n_total
-      p_total
-      n_from_donor
-      n_from_intrinsic
-      n_donor_bound
-      frac_donor
-      sw_intrinsic
+    表示用の3領域モデル
+    1) 低温: ドナー準位に電子
+    2) 室温付近: ドナーはほぼ完全電離
+    3) 高温: 真性励起が増える
     """
     ni = intrinsic_density(T)
 
-    # ドナー励起
-    frac_donor = donor_ionized_fraction(T, Ec - E_D)
-    frac_donor = min(max(frac_donor, 0.0), 1.0)
-
+    frac_donor = donor_ionized_fraction(T)
     n_from_donor = ND * frac_donor
     n_donor_bound = ND - n_from_donor
 
-    # ドナーがほぼ空になってからだけ真性励起を許す
-    sw_intrinsic = intrinsic_switch(frac_donor, threshold=0.98)
-    n_from_intrinsic = sw_intrinsic * ni
+    frac_intrinsic = intrinsic_fraction(T, ND)
+    n_from_intrinsic = ni * frac_intrinsic
     p_total = n_from_intrinsic
 
     n_total = n_from_donor + n_from_intrinsic
@@ -94,31 +95,23 @@ def carrier_density_n_type(T, ND):
         n_from_intrinsic,
         n_donor_bound,
         frac_donor,
-        sw_intrinsic
+        frac_intrinsic
     )
 
 
-def fermi_level_n_type(T, frac_donor, sw_intrinsic):
+def fermi_level_n_type(T, frac_donor, frac_intrinsic):
     """
     表示用の簡易フェルミ準位
-    - 0 Kでは Ed
-    - ドナー励起で Ec 側へ寄る
-    - 真性励起が効いてきたら中央へ少し戻る
     """
     if T <= 0:
         return E_D
 
-    Ef_donor = E_D + 0.75 * (Ec - E_D) * frac_donor
-    Ef = (1.0 - 0.5 * sw_intrinsic) * Ef_donor + (0.5 * sw_intrinsic) * 0.0
+    # 外因性領域では Ec 側へ
+    Ef_extrinsic = E_D + 0.9 * (Ec - E_D) * frac_donor
+
+    # 真性領域で中央へ戻す
+    Ef = (1.0 - 0.85 * frac_intrinsic) * Ef_extrinsic + (0.85 * frac_intrinsic) * 0.0
     return Ef
-
-
-def density_to_points(density, max_points=30, log_min=8, log_max=19):
-    if density <= 0:
-        return 0
-    log_n = np.log10(density)
-    points = (log_n - log_min) / (log_max - log_min) * max_points
-    return int(np.clip(points, 0, max_points))
 
 
 # -----------------------------
@@ -147,7 +140,7 @@ def sample_valence(T, n_points):
 def sample_donor_level(T, n_points):
     if n_points <= 0:
         return np.array([])
-    width = 0.001 if T <= 0 else min(0.004, 0.15 * k_B * T)
+    width = 0.001 if T <= 0 else min(0.004, 0.12 * k_B * T)
     return E_D + np.random.normal(0.0, width, size=n_points)
 
 
@@ -165,31 +158,20 @@ def plot_band(T_C, ND):
         n_from_intrinsic,
         n_donor_bound,
         frac_donor,
-        sw_intrinsic
+        frac_intrinsic
     ) = carrier_density_n_type(T, ND)
 
-    Ef = fermi_level_n_type(T, frac_donor, sw_intrinsic)
+    Ef = fermi_level_n_type(T, frac_donor, frac_intrinsic)
 
     # -------------------------
     # 表示個数
     # -------------------------
-    # ドナー由来の電子は常に30個を母数として、
-    # Ed に残るか Ec に上がるかだけを見せる
+    # ドナー由来電子は30個を固定母数
     n_donor_cb_display = int(round(N_DONOR_DISPLAY * frac_donor))
     n_donor_bound_display = N_DONOR_DISPLAY - n_donor_cb_display
 
-    # 真性励起は、ドナーがほぼ空になった後にだけ追加表示
-    if sw_intrinsic > 0.0 and n_from_intrinsic > 0.0:
-        intrinsic_strength = min(
-            1.0,
-            (np.log10(max(n_from_intrinsic, 1e-30)) - 8.0) / (17.0 - 8.0)
-        )
-        intrinsic_strength = max(0.0, intrinsic_strength)
-        intrinsic_strength *= sw_intrinsic
-        n_intrinsic_display = int(round(N_INTRINSIC_MAX_DISPLAY * intrinsic_strength))
-    else:
-        n_intrinsic_display = 0
-
+    # 真性励起は高温で増える
+    n_intrinsic_display = int(round(N_INTRINSIC_MAX_DISPLAY * frac_intrinsic))
     p_intrinsic_display = n_intrinsic_display
 
     fig, ax = plt.subplots(figsize=(5, 8))
@@ -206,9 +188,7 @@ def plot_band(T_C, ND):
     ax.text(1.02, E_D, "Ed", va="center", color="green")
     ax.text(1.02, Ef, "Ef", va="center", color="r")
 
-    # -------------------------
     # ドナー準位に残る電子（青）
-    # -------------------------
     if n_donor_bound_display > 0:
         y_d = sample_donor_level(T, n_donor_bound_display)
         x_d = np.random.uniform(0.18, 0.82, size=n_donor_bound_display)
@@ -219,22 +199,18 @@ def plot_band(T_C, ND):
             label="Donor electrons"
         )
 
-    # -------------------------
     # ドナー準位から伝導帯へ励起した電子（青）
-    # -------------------------
     if n_donor_cb_display > 0:
         y_e_donor = sample_conduction(T, n_donor_cb_display)
         x_e_donor = np.random.uniform(0.18, 0.82, size=n_donor_cb_display)
         ax.scatter(
             x_e_donor, y_e_donor,
-            s=20,
+            s=22,
             color='blue',
             label="Donor-excited electrons"
         )
 
-    # -------------------------
     # 価電子帯から伝導帯へ励起した電子（紫）
-    # -------------------------
     if n_intrinsic_display > 0:
         y_e_int = sample_conduction(T, n_intrinsic_display)
         x_e_int = np.random.uniform(0.18, 0.82, size=n_intrinsic_display)
@@ -245,9 +221,7 @@ def plot_band(T_C, ND):
             label="Valence-excited electrons"
         )
 
-    # -------------------------
-    # 真性励起に対応する正孔（赤縁白抜き）
-    # -------------------------
+    # 正孔（赤縁白抜き）
     if p_intrinsic_display > 0:
         y_h = sample_valence(T, p_intrinsic_display)
         x_h = np.random.uniform(0.18, 0.82, size=p_intrinsic_display)
@@ -261,7 +235,7 @@ def plot_band(T_C, ND):
         )
 
     # 励起矢印
-    if 0 < n_donor_cb_display < N_DONOR_DISPLAY:
+    if n_donor_cb_display > 0:
         ax.annotate(
             "",
             xy=(0.10, Ec - 0.01),
@@ -287,8 +261,8 @@ def plot_band(T_C, ND):
         f"T = {T_C:.0f} °C ({T:.2f} K)\n"
         f"ND = {ND:.2e} cm⁻³\n"
         f"ni = {ni:.2e} cm⁻³\n"
-        f"n_donor->CB = {n_from_donor:.2e}\n"
-        f"n_valence->CB = {n_from_intrinsic:.2e}, p = {p_total:.2e}"
+        f"donor ionized fraction = {frac_donor:.3f}\n"
+        f"intrinsic fraction = {frac_intrinsic:.3f}"
     )
 
     ax.legend(loc="upper left", fontsize=9)
@@ -299,7 +273,7 @@ def plot_band(T_C, ND):
 # -----------------------------
 # Streamlit UI
 # -----------------------------
-st.title("n型半導体：ドナー励起 → 真性励起")
+st.title("n型半導体：低温凍結 → 外因性領域 → 真性領域")
 
 T_C = st.slider("Temperature (°C)", -273, 1000, 25, 1)
 log_ND = st.slider("log10(ND) [cm⁻³]", 12.0, 19.0, 16.0, 0.1)
