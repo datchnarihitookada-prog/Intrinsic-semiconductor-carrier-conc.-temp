@@ -104,7 +104,7 @@ def plot_band(T_C, ND):
 
     n_e = density_to_points(n)                  # 伝導帯電子
     n_h = density_to_points(p)                  # 正孔
-    n_d = density_to_points(n_donor_bound)      # ドナー準位に残る電子
+    n_d = min(30, density_to_points(n_donor_bound))     # ドナー準位に残る電子
 
     fig, ax = plt.subplots(figsize=(5, 8))
 
