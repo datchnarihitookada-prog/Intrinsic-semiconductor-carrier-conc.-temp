@@ -170,6 +170,13 @@ def plot_band(T_C, ND):
     n_donor_cb_display = int(round(N_DONOR_DISPLAY * frac_donor))
     n_donor_bound_display = N_DONOR_DISPLAY - n_donor_cb_display
 
+    def density_to_points(density, max_points=30, log_min=8, log_max=19):
+    if density <= 0:
+        return 0
+    log_n = np.log10(density)
+    points = (log_n - log_min) / (log_max - log_min) * max_points
+    return int(np.clip(points, 0, max_points))
+    
     # 真性励起は高温で個数制限なし
     n_intrinsic_display = density_to_points(
     n_from_intrinsic,
