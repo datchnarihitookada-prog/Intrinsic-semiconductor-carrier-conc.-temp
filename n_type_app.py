@@ -102,9 +102,14 @@ def plot_band(T_C, ND):
     ni, n, p, n_donor_bound, frac = carrier_density_n_type(T, ND)
     Ef = fermi_level_n_type(T, frac)
 
-    n_e = density_to_points(n)                  # 伝導帯電子
-    n_h = density_to_points(p)                  # 正孔
-    n_d = min(30, density_to_points(n_donor_bound))     # ドナー準位に残る電子
+n_total_display = 30
+
+# ドナー由来電子30個を、温度に応じてドナー準位と伝導帯に振り分ける
+n_e = int(round(n_total_display * frac))            # 伝導帯へ励起した電子
+n_d = n_total_display - n_e                         # ドナー準位に残る電子
+
+# 正孔は別扱い（少なめ表示）
+n_h = min(30, density_to_points(p))
 
     fig, ax = plt.subplots(figsize=(5, 8))
 
