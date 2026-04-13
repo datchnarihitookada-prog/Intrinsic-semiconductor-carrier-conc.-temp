@@ -170,9 +170,16 @@ def plot_band(T_C, ND):
     n_donor_cb_display = int(round(N_DONOR_DISPLAY * frac_donor))
     n_donor_bound_display = N_DONOR_DISPLAY - n_donor_cb_display
 
-    # 真性励起は高温で増える
-    n_intrinsic_display = int(round(N_INTRINSIC_MAX_DISPLAY * frac_intrinsic))
-    p_intrinsic_display = n_intrinsic_display
+
+
+    # 真性励起は高温で個数制限なし
+n_intrinsic_display = density_to_points(
+    n_from_intrinsic,
+    max_points=300,
+    log_min=8,
+    log_max=19
+)
+p_intrinsic_display = n_intrinsic_display
 
     fig, ax = plt.subplots(figsize=(5, 8))
 
