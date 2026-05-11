@@ -166,7 +166,21 @@ def plot_band(T_C, NA):
     # アクセプタ由来の正孔は30個固定
     p_acceptor_valence_display = int(round(N_ACCEPTOR_DISPLAY * frac_acceptor))
     n_acceptor_bound_display = p_acceptor_valence_display
-    n_acceptor_empty_display = N_ACCEPTOR_DISPLAY - n_acceptor_bound_display
+    # --------------------------------
+    # アクセプタ由来キャリア表示
+    # NAが増えると表示粒子も増える
+    # --------------------------------
+
+    p_acceptor_density = p_from_acceptor
+
+    p_acceptor_valence_display = density_to_points(
+        p_acceptor_density,
+        max_points=120,
+        log_min=12,
+        log_max=19
+    )
+
+    n_acceptor_bound_display = p_acceptor_valence_display
 
     # 真性励起は高温で増やす
     p_intrinsic_display = density_to_points(
