@@ -41,7 +41,7 @@ def intrinsic_density(T, Eg, Nc_300, Nv_300):
     return ni
 
 
-def plot_intrinsic_density(Eg_other semiconductor):
+def plot_intrinsic_density(Eg_other):
 
     # Temperature range
     T = np.linspace(250, 2000, 2000)
@@ -57,10 +57,10 @@ def plot_intrinsic_density(Eg_other semiconductor):
         Nv_Si_300
     )
 
-    # Compared other semiconductor
-    ni_other semiconductor = intrinsic_density(
+    # Other semiconductor
+    ni_other = intrinsic_density(
         T,
-        Eg_other semiconductor,
+        Eg_other,
         Nc_Si_300,
         Nv_Si_300
     )
@@ -69,7 +69,7 @@ def plot_intrinsic_density(Eg_other semiconductor):
     # Plot
     # -----------------------------
     fig, ax = plt.subplots(
-        figsize=(5.6, 4.2),
+        figsize=(5.8, 4.2),
         dpi=120
     )
 
@@ -83,10 +83,10 @@ def plot_intrinsic_density(Eg_other semiconductor):
 
     ax.semilogy(
         inv_T,
-        ni_other semiconductor,
+        ni_other,
         linewidth=2.5,
         color="red",
-        label=f"other semiconductor : Eg = {Eg_other semiconductor:.2f} eV"
+        label=f"Other semiconductor : Eg = {Eg_other:.2f} eV"
     )
 
     # Axis labels
@@ -101,7 +101,7 @@ def plot_intrinsic_density(Eg_other semiconductor):
     )
 
     # Axis ranges
-    ax.set_xlim(0.5, 4.0)
+    ax.set_xlim(0.1, 4.0)
     ax.set_ylim(1e7, 1e19)
 
     # Tick style
@@ -139,8 +139,8 @@ with col1:
 
     st.subheader("Controls")
 
-    Eg_other semiconductor = st.slider(
-        "Bandgap of compared other semiconductor Eg (eV)",
+    Eg_other = st.slider(
+        "Bandgap of other semiconductor Eg (eV)",
         0.5,
         6.0,
         3.4,
@@ -152,7 +152,7 @@ with col1:
 # -----------------------------
 with col2:
 
-    fig = plot_intrinsic_density(Eg_other semiconductor)
+    fig = plot_intrinsic_density(Eg_other)
 
     st.pyplot(
         fig,
@@ -168,7 +168,7 @@ with col3:
 
     st.markdown(
         f"""
-### Fixed other semiconductor
+### Fixed semiconductor
 
 Si  
 
@@ -176,9 +176,9 @@ Eg = {Eg_Si:.2f} eV
 
 ---
 
-### Compared other semiconductor
+### Other semiconductor
 
-Eg = {Eg_other semiconductor:.2f} eV  
+Eg = {Eg_other:.2f} eV  
 
 ---
 
@@ -186,7 +186,7 @@ Eg = {Eg_other semiconductor:.2f} eV
 
 x-axis : 1000 / T  
 
-0.5 → 4.0 K⁻¹  
+0.1 → 4.0 K⁻¹  
 
 ---
 
