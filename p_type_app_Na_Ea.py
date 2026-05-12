@@ -292,7 +292,7 @@ def plot_band(T_C, NA, Ea_depth):
 # -----------------------------
 # Streamlit UI
 # -----------------------------
-st.title("p型半導体：低温凍結 → 外因性領域 → 真性領域")
+st.title("p型半導体：T, Na, Ea変化")
 
 T_C = st.slider(
     "Temperature (°C)",
