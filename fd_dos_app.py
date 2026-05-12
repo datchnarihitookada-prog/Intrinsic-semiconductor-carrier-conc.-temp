@@ -109,13 +109,15 @@ def plot_distribution(T, Eg, Ef):
     E,
     electron_dist_norm,
     linewidth=2,
+    color="blue",
     label="Electron density distribution"
     )
 
     ax.fill_between(
     E,
     electron_dist_norm,
-    alpha=0.30
+    color="blue",
+    alpha=0.25
     )
 
     # Hole density distribution
@@ -124,14 +126,16 @@ def plot_distribution(T, Eg, Ef):
     hole_dist_norm,
     linewidth=2,
     linestyle="--",
+    color="red",
     label="Hole density distribution"
     )
 
-    ax.fill_between(
+ax.fill_between(
     E,
     hole_dist_norm,
+    color="red",
     alpha=0.25
-    )
+)
 
     ax.axvline(Ev, linestyle="--", linewidth=1.5)
     ax.axvline(Ef, linestyle="--", linewidth=1.5)
