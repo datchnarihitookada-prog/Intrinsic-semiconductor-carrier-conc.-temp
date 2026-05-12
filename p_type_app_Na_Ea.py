@@ -292,33 +292,49 @@ def plot_band(T_C, NA, Ea_depth):
 # -----------------------------
 # Streamlit UI
 # -----------------------------
-st.title("p型半導体：T, Na, Ea変化")
+st.set_page_config(layout="wide")
 
-T_C = st.slider(
-    "Temperature (°C)",
-    -273,
-    1000,
-    25,
-    1
-)
+st.title("p型半導体：低温凍結 → 外因性領域 → 真性領域")
 
-log_NA = st.slider(
-    "log10(NA) [cm⁻³]",
-    12.0,
-    19.0,
-    16.0,
-    0.1
-)
+# 左右分割
+col1, col2 = st.columns([1, 2.2])
 
-Ea_depth = st.slider(
-    "Acceptor level Ea - Ev (eV)",
-    0.03,
-    0.30,
-    0.045,
-    0.005
-)
+# -----------------------------
+# 左：スライダー
+# -----------------------------
+with col1:
 
-NA = 10 ** log_NA
+    T_C = st.slider(
+        "Temperature (°C)",
+        -273,
+        1000,
+        25,
+        1
+    )
 
-fig = plot_band(T_C, NA, Ea_depth)
-st.pyplot(fig)
+    log_NA = st.slider(
+        "log10(NA) [cm⁻³]",
+        12.0,
+        19.0,
+        16.0,
+        0.1
+    )
+
+    Ea_depth = st.slider(
+        "Acceptor level Ea - Ev (eV)",
+        0.03,
+        0.30,
+        0.045,
+        0.005
+    )
+
+# -----------------------------
+# 右：グラフ
+# -----------------------------
+with col2:
+
+    NA = 10 ** log_NA
+
+    fig = plot_band(T_C, NA, Ea_depth)
+
+    st.pyplot(fig, use_container_width=True)
