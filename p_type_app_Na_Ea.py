@@ -26,16 +26,18 @@ def intrinsic_density(T):
 
 def acceptor_ionized_fraction(T, Ea_depth):
     """
-    Ea_depth が大きいほど深いアクセプタとなり、電離しにくくなる簡易モデル
+    アクセプタ熱活性化モデル
+    深い準位ほど室温で電離しにくい
     """
+
     if T <= 0:
         return 0.0
 
-    # Ea = 0.045 eV のとき、従来と同程度に室温付近でほぼ電離
-    T0 = 120.0 * (Ea_depth / 0.045)
-    dT = 18.0 * (Ea_depth / 0.045)
+    # 経験的前因子
+    prefactor = 5.0
 
-    frac = 1.0 / (1.0 + np.exp(-(T - T0) / dT))
+    frac = prefactor * np.exp(-Ea_depth / (k_B * T))
+
     return float(np.clip(frac, 0.0, 1.0))
 
 
