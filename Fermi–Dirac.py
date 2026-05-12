@@ -98,7 +98,17 @@ def plot_fermi_dirac(T, Eg, Ef):
 
     fig.tight_layout()
 
-    return fig, semiconductor_type, Ec, Ev
+    f_Ec = fermi_dirac(Ec, Ef, T)
+    hole_Ev = 1.0 - fermi_dirac(Ev, Ef, T)
+
+    return (
+    fig,
+    semiconductor_type,
+    Ec,
+    Ev,
+    f_Ec,
+    hole_Ev
+    )
 
 
 # -----------------------------
