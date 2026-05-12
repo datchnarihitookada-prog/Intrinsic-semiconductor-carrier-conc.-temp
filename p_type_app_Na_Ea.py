@@ -3,7 +3,12 @@ import matplotlib.pyplot as plt
 import streamlit as st
 
 # -----------------------------
-# 定数
+# Page setting
+# -----------------------------
+st.set_page_config(layout="wide")
+
+# -----------------------------
+# Constants
 # -----------------------------
 k_B = 8.617e-5   # eV/K
 Eg = 1.1         # eV
@@ -16,7 +21,7 @@ Ev = -Eg / 2
 
 
 # -----------------------------
-# 基本関数
+# Basic functions
 # -----------------------------
 def intrinsic_density(T):
     if T <= 0:
@@ -26,25 +31,19 @@ def intrinsic_density(T):
 
 def acceptor_ionized_fraction(T, Ea_depth):
     """
-    アクセプタ熱活性化モデル
-    深い準位ほど室温で電離しにくい
+    Arrhenius-type acceptor activation model.
+    Deeper acceptors are harder to ionize.
     """
-
     if T <= 0:
         return 0.0
 
-    # 経験的前因子
     prefactor = 5.0
-
     frac = prefactor * np.exp(-Ea_depth / (k_B * T))
 
     return float(np.clip(frac, 0.0, 1.0))
 
 
 def intrinsic_fraction(T, NA):
-    """
-    ni << NA では小さく、ni >> NA で 1 に近づく
-    """
     if T <= 0:
         return 0.0
 
@@ -67,10 +66,8 @@ def carrier_density_p_type(T, NA, Ea_depth):
 
     frac_acceptor = acceptor_ionized_fraction(T, Ea_depth)
 
-    # アクセプタ由来の正孔
     p_from_acceptor = NA * frac_acceptor
 
-    # 真性励起
     frac_intrinsic = intrinsic_fraction(T, NA)
     n_from_intrinsic = ni * frac_intrinsic
     p_from_intrinsic = ni * frac_intrinsic
@@ -111,7 +108,7 @@ def density_to_points(density, max_points=160, log_min=12, log_max=19):
 
 
 # -----------------------------
-# 描画用サンプリング
+# Sampling functions
 # -----------------------------
 def sample_conduction(T, n_points):
     if n_points <= 0:
@@ -143,11 +140,10 @@ def sample_acceptor_level(T, n_points, E_A):
 
 
 # -----------------------------
-# プロット
+# Plot
 # -----------------------------
 def plot_band(T_C, NA, Ea_depth):
     T = T_C + 273.15
-
     E_A = Ev + Ea_depth
 
     (
@@ -163,12 +159,9 @@ def plot_band(T_C, NA, Ea_depth):
 
     Ef = fermi_level_p_type(T, frac_acceptor, frac_intrinsic, E_A)
 
-    # -----------------------------
-    # NA依存を反映した表示粒子数
-    # -----------------------------
     p_acceptor_valence_display = density_to_points(
         p_from_acceptor,
-        max_points=160,
+        max_points=120,
         log_min=12,
         log_max=19
     )
@@ -177,79 +170,79 @@ def plot_band(T_C, NA, Ea_depth):
 
     p_intrinsic_display = density_to_points(
         p_from_intrinsic,
-        max_points=220,
+        max_points=160,
         log_min=8,
         log_max=19
     )
 
     n_intrinsic_display = p_intrinsic_display
 
-    fig, ax = plt.subplots(figsize=(5, 8))
+    fig, ax = plt.subplots(figsize=(6.5, 8))
 
-    # バンド・準位
+    # Bands and levels
     ax.plot([0, 1], [Ec, Ec], 'k', linewidth=2)
     ax.plot([0, 1], [Ev, Ev], 'k', linewidth=2)
     ax.plot([0, 1], [E_A, E_A], '--', color='green', linewidth=1.5)
     ax.plot([0, 1], [Ef, Ef], 'r--', linewidth=1.5)
 
-    ax.text(1.02, Ec, "Ec", va="center")
-    ax.text(1.02, Ev, "Ev", va="center")
-    ax.text(1.02, E_A, "Ea", va="center", color="green")
-    ax.text(1.02, Ef, "Ef", va="center", color="r")
+    ax.text(1.03, Ec, "Ec", va="center")
+    ax.text(1.03, Ev, "Ev", va="center")
+    ax.text(1.03, E_A, "Ea", va="center", color="green")
+    ax.text(1.03, Ef, "Ef", va="center", color="r")
 
-    # アクセプタに捕獲された電子
+    # Acceptor-captured electrons
     if n_acceptor_bound_display > 0:
         y_a = sample_acceptor_level(T, n_acceptor_bound_display, E_A)
         x_a = np.random.uniform(0.18, 0.82, size=n_acceptor_bound_display)
 
         ax.scatter(
             x_a, y_a,
-            s=20,
+            s=12,
             color='blue',
             label="Acceptor-captured electrons"
         )
 
-    # アクセプタ電離で生じた正孔
+    # Acceptor-generated holes
     if p_acceptor_valence_display > 0:
         y_h_acc = sample_valence(T, p_acceptor_valence_display)
         x_h_acc = np.random.uniform(0.18, 0.82, size=p_acceptor_valence_display)
 
         ax.scatter(
             x_h_acc, y_h_acc,
-            s=22,
+            s=14,
             facecolors='white',
             edgecolors='red',
-            linewidths=1.1,
+            linewidths=1.0,
             label="Acceptor-generated holes"
         )
 
-    # 真性励起電子
+    # Intrinsic electrons
     if n_intrinsic_display > 0:
         y_e_int = sample_conduction(T, n_intrinsic_display)
         x_e_int = np.random.uniform(0.18, 0.82, size=n_intrinsic_display)
 
         ax.scatter(
             x_e_int, y_e_int,
-            s=18,
+            s=12,
             color='purple',
             label="Intrinsic electrons"
         )
 
-    # 真性励起正孔
+    # Intrinsic holes
     if p_intrinsic_display > 0:
         y_h_int = sample_valence(T, p_intrinsic_display)
         x_h_int = np.random.uniform(0.18, 0.82, size=p_intrinsic_display)
 
         ax.scatter(
             x_h_int, y_h_int,
-            s=18,
+            s=12,
             facecolors='white',
             edgecolors='purple',
-            linewidths=1.1,
+            linewidths=1.0,
             label="Intrinsic holes"
         )
 
-    # 励起矢印
+    # Excitation arrows
     if p_acceptor_valence_display > 0:
         ax.annotate(
             "",
@@ -266,43 +259,34 @@ def plot_band(T_C, NA, Ea_depth):
             arrowprops=dict(arrowstyle="->", lw=1.2, color="gray")
         )
 
-    ax.set_xlim(0, 1)
+    ax.set_xlim(0, 1.15)
     ax.set_ylim(-1.5, 1.5)
     ax.set_xticks([])
     ax.set_ylabel("Energy (eV)")
     ax.tick_params(axis='both', direction='in')
-
-    ax.set_title(
-        f"T = {T_C:.0f} °C ({T:.2f} K)\n"
-        f"NA = {NA:.2e} cm⁻³\n"
-        f"Ea - Ev = {Ea_depth:.3f} eV\n"
-        f"p = {p_total:.2e} cm⁻³\n"
-        f"n = {n_total:.2e} cm⁻³\n"
-        f"ni = {ni:.2e} cm⁻³\n"
-        f"acceptor ionized fraction = {frac_acceptor:.3f}\n"
-        f"intrinsic fraction = {frac_intrinsic:.3f}"
-    )
-
     ax.legend(loc="upper left", fontsize=8)
+
     fig.tight_layout()
 
-    return fig
+    return (
+        fig,
+        ni,
+        n_total,
+        p_total,
+        frac_acceptor,
+        frac_intrinsic
+    )
 
 
 # -----------------------------
 # Streamlit UI
 # -----------------------------
-st.set_page_config(layout="wide")
+st.title("p型半導体　パラメータ：T, Na, Ea")
 
-st.title("p型半導体：低温凍結 → 外因性領域 → 真性領域")
+col1, col2 = st.columns([0.75, 3.25])
 
-# 左右分割
-col1, col2 = st.columns([1, 2.2])
-
-# -----------------------------
-# 左：スライダー
-# -----------------------------
 with col1:
+    st.subheader("Controls")
 
     T_C = st.slider(
         "Temperature (°C)",
@@ -321,20 +305,63 @@ with col1:
     )
 
     Ea_depth = st.slider(
-        "Acceptor level Ea - Ev (eV)",
+        "Ea - Ev (eV)",
         0.03,
         0.30,
         0.045,
         0.005
     )
 
-# -----------------------------
-# 右：グラフ
-# -----------------------------
 with col2:
-
     NA = 10 ** log_NA
 
-    fig = plot_band(T_C, NA, Ea_depth)
+    (
+        fig,
+        ni,
+        n_total,
+        p_total,
+        frac_acceptor,
+        frac_intrinsic
+    ) = plot_band(T_C, NA, Ea_depth)
 
-    st.pyplot(fig, use_container_width=True)
+    graph_col, info_col = st.columns([2.2, 1.0])
+
+    with graph_col:
+        st.pyplot(fig, use_container_width=True)
+
+    with info_col:
+        st.subheader("Parameters")
+
+        st.markdown(
+            f"""
+**Temperature**  
+{T_C:.0f} °C  
+{T_C + 273.15:.2f} K  
+
+**NA**  
+{NA:.2e} cm⁻³  
+
+**Ea - Ev**  
+{Ea_depth:.3f} eV  
+
+---
+
+**Carrier density**
+
+p = {p_total:.2e} cm⁻³  
+
+n = {n_total:.2e} cm⁻³  
+
+ni = {ni:.2e} cm⁻³  
+
+---
+
+**Ionization**
+
+Acceptor ionized fraction  
+{frac_acceptor:.3e}  
+
+Intrinsic fraction  
+{frac_intrinsic:.3e}  
+"""
+        )
