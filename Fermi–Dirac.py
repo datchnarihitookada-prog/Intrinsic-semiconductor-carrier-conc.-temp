@@ -106,9 +106,10 @@ def plot_fermi_dirac(T, Eg, Ef):
 # -----------------------------
 st.title("フェルミディラック分布関数")
 
-col1, col2 = st.columns([1.0, 2.0])
+col1, col2 = st.columns([0.8, 1.6])
 
 with col1:
+    st.subheader("Controls")
 
     T_C = st.slider(
         "Temperature (°C)",
@@ -135,38 +136,41 @@ with col1:
     )
 
 with col2:
-
     T = T_C + 273.15
 
-    (
-        fig,
-        semiconductor_type,
-        Ec,
-        Ev
-    ) = plot_fermi_dirac(T, Eg, Ef)
+    fig, semiconductor_type, Ec, Ev = plot_fermi_dirac(T, Eg, Ef)
 
-    st.pyplot(fig, use_container_width=True)
+    graph_col, info_col = st.columns([1.5, 0.8])
 
-    st.markdown(
-        f"""
-### Parameters
+    with graph_col:
+        st.pyplot(fig, use_container_width=True)
 
-- Temperature = {T_C:.0f} °C
-- Temperature = {T:.2f} K
-- Bandgap Eg = {Eg:.2f} eV
-- Fermi level Ef = {Ef:.3f} eV
+    with info_col:
+        st.subheader("Parameters")
 
----
+        st.markdown(
+            f"""
+**Temperature**  
+{T_C:.0f} °C  
+{T:.2f} K  
 
-### Semiconductor type
+**Bandgap Eg**  
+{Eg:.2f} eV  
 
-- {semiconductor_type}
+**Fermi level Ef**  
+{Ef:.3f} eV  
 
 ---
 
-### Band positions
+**Type**  
+{semiconductor_type}
 
-- Ec = +{Ec:.3f} eV
-- Ev = {Ev:.3f} eV
+---
+
+**Band positions**
+
+Ec = +{Ec:.3f} eV  
+
+Ev = {Ev:.3f} eV  
 """
-    )
+        )
