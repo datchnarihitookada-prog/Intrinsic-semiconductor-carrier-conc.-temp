@@ -41,7 +41,7 @@ def intrinsic_density(T, Eg, Nc_300, Nv_300):
     return ni
 
 
-def plot_intrinsic_density(Eg_material):
+def plot_intrinsic_density(Eg_other semiconductor):
 
     # Temperature range
     T = np.linspace(250, 2000, 2000)
@@ -57,10 +57,10 @@ def plot_intrinsic_density(Eg_material):
         Nv_Si_300
     )
 
-    # Compared material
-    ni_material = intrinsic_density(
+    # Compared other semiconductor
+    ni_other semiconductor = intrinsic_density(
         T,
-        Eg_material,
+        Eg_other semiconductor,
         Nc_Si_300,
         Nv_Si_300
     )
@@ -83,10 +83,10 @@ def plot_intrinsic_density(Eg_material):
 
     ax.semilogy(
         inv_T,
-        ni_material,
+        ni_other semiconductor,
         linewidth=2.5,
         color="red",
-        label=f"Material : Eg = {Eg_material:.2f} eV"
+        label=f"other semiconductor : Eg = {Eg_other semiconductor:.2f} eV"
     )
 
     # Axis labels
@@ -139,8 +139,8 @@ with col1:
 
     st.subheader("Controls")
 
-    Eg_material = st.slider(
-        "Bandgap of compared material Eg (eV)",
+    Eg_other semiconductor = st.slider(
+        "Bandgap of compared other semiconductor Eg (eV)",
         0.5,
         6.0,
         3.4,
@@ -152,7 +152,7 @@ with col1:
 # -----------------------------
 with col2:
 
-    fig = plot_intrinsic_density(Eg_material)
+    fig = plot_intrinsic_density(Eg_other semiconductor)
 
     st.pyplot(
         fig,
@@ -168,7 +168,7 @@ with col3:
 
     st.markdown(
         f"""
-### Fixed material
+### Fixed other semiconductor
 
 Si  
 
@@ -176,9 +176,9 @@ Eg = {Eg_Si:.2f} eV
 
 ---
 
-### Compared material
+### Compared other semiconductor
 
-Eg = {Eg_material:.2f} eV  
+Eg = {Eg_other semiconductor:.2f} eV  
 
 ---
 
