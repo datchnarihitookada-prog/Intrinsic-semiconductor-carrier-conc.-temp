@@ -13,7 +13,6 @@ Nv = 1.04e19     # cm^-3
 
 Ec = Eg / 2
 Ev = -Eg / 2
-E_A = Ev + 0.045   # acceptor level
 
 
 # -----------------------------
@@ -25,15 +24,17 @@ def intrinsic_density(T):
     return np.sqrt(Nc * Nv) * np.exp(-Eg / (2 * k_B * T))
 
 
-def acceptor_ionized_fraction(T):
+def acceptor_ionized_fraction(T, Ea_depth):
     """
-    低温では未電離、室温付近ではほぼ完全電離になる簡易モデル
+    Ea_depth が大きいほど深いアクセプタとなり、電離しにくくなる簡易モデル
     """
     if T <= 0:
         return 0.0
 
-    T0 = 120.0
-    dT = 18.0
+    # Ea = 0.045 eV のとき、従来と同程度に室温付近でほぼ電離
+    T0 = 120.0 * (Ea_depth / 0.045)
+    dT = 18.0 * (Ea_depth / 0.045)
+
     frac = 1.0 / (1.0 + np.exp(-(T - T0) / dT))
     return float(np.clip(frac, 0.0, 1.0))
 
@@ -59,10 +60,10 @@ def intrinsic_fraction(T, NA):
     return float(np.clip(frac, 0.0, 1.0))
 
 
-def carrier_density_p_type(T, NA):
+def carrier_density_p_type(T, NA, Ea_depth):
     ni = intrinsic_density(T)
 
-    frac_acceptor = acceptor_ionized_fraction(T)
+    frac_acceptor = acceptor_ionized_fraction(T, Ea_depth)
 
     # アクセプタ由来の正孔
     p_from_acceptor = NA * frac_acceptor
@@ -87,12 +88,13 @@ def carrier_density_p_type(T, NA):
     )
 
 
-def fermi_level_p_type(T, frac_acceptor, frac_intrinsic):
+def fermi_level_p_type(T, frac_acceptor, frac_intrinsic, E_A):
     if T <= 0:
         return E_A
 
     Ef_extrinsic = E_A - 0.9 * (E_A - Ev) * frac_acceptor
     Ef = (1.0 - 0.85 * frac_intrinsic) * Ef_extrinsic + (0.85 * frac_intrinsic) * 0.0
+
     return Ef
 
 
@@ -102,6 +104,7 @@ def density_to_points(density, max_points=160, log_min=12, log_max=19):
 
     log_n = np.log10(density)
     points = (log_n - log_min) / (log_max - log_min) * max_points
+
     return int(np.clip(points, 0, max_points))
 
 
@@ -114,6 +117,7 @@ def sample_conduction(T, n_points):
 
     scale = max(k_B * T, 1e-6)
     dE = np.random.exponential(scale=scale, size=n_points)
+
     return Ec + dE
 
 
@@ -123,22 +127,26 @@ def sample_valence(T, n_points):
 
     scale = max(k_B * T, 1e-6)
     dE = np.random.exponential(scale=scale, size=n_points)
+
     return Ev - dE
 
 
-def sample_acceptor_level(T, n_points):
+def sample_acceptor_level(T, n_points, E_A):
     if n_points <= 0:
         return np.array([])
 
     width = min(0.004, 0.12 * k_B * T)
+
     return E_A + np.random.normal(0.0, width, size=n_points)
 
 
 # -----------------------------
 # プロット
 # -----------------------------
-def plot_band(T_C, NA):
+def plot_band(T_C, NA, Ea_depth):
     T = T_C + 273.15
+
+    E_A = Ev + Ea_depth
 
     (
         ni,
@@ -149,9 +157,9 @@ def plot_band(T_C, NA):
         n_from_intrinsic,
         frac_acceptor,
         frac_intrinsic
-    ) = carrier_density_p_type(T, NA)
+    ) = carrier_density_p_type(T, NA, Ea_depth)
 
-    Ef = fermi_level_p_type(T, frac_acceptor, frac_intrinsic)
+    Ef = fermi_level_p_type(T, frac_acceptor, frac_intrinsic, E_A)
 
     # -----------------------------
     # NA依存を反映した表示粒子数
@@ -189,8 +197,9 @@ def plot_band(T_C, NA):
 
     # アクセプタに捕獲された電子
     if n_acceptor_bound_display > 0:
-        y_a = sample_acceptor_level(T, n_acceptor_bound_display)
+        y_a = sample_acceptor_level(T, n_acceptor_bound_display, E_A)
         x_a = np.random.uniform(0.18, 0.82, size=n_acceptor_bound_display)
+
         ax.scatter(
             x_a, y_a,
             s=20,
@@ -202,6 +211,7 @@ def plot_band(T_C, NA):
     if p_acceptor_valence_display > 0:
         y_h_acc = sample_valence(T, p_acceptor_valence_display)
         x_h_acc = np.random.uniform(0.18, 0.82, size=p_acceptor_valence_display)
+
         ax.scatter(
             x_h_acc, y_h_acc,
             s=22,
@@ -215,6 +225,7 @@ def plot_band(T_C, NA):
     if n_intrinsic_display > 0:
         y_e_int = sample_conduction(T, n_intrinsic_display)
         x_e_int = np.random.uniform(0.18, 0.82, size=n_intrinsic_display)
+
         ax.scatter(
             x_e_int, y_e_int,
             s=18,
@@ -226,6 +237,7 @@ def plot_band(T_C, NA):
     if p_intrinsic_display > 0:
         y_h_int = sample_valence(T, p_intrinsic_display)
         x_h_int = np.random.uniform(0.18, 0.82, size=p_intrinsic_display)
+
         ax.scatter(
             x_h_int, y_h_int,
             s=18,
@@ -261,6 +273,7 @@ def plot_band(T_C, NA):
     ax.set_title(
         f"T = {T_C:.0f} °C ({T:.2f} K)\n"
         f"NA = {NA:.2e} cm⁻³\n"
+        f"Ea - Ev = {Ea_depth:.3f} eV\n"
         f"p = {p_total:.2e} cm⁻³\n"
         f"n = {n_total:.2e} cm⁻³\n"
         f"ni = {ni:.2e} cm⁻³\n"
@@ -279,7 +292,13 @@ def plot_band(T_C, NA):
 # -----------------------------
 st.title("p型半導体：低温凍結 → 外因性領域 → 真性領域")
 
-T_C = st.slider("Temperature (°C)", -273, 1000, 25, 1)
+T_C = st.slider(
+    "Temperature (°C)",
+    -273,
+    1000,
+    25,
+    1
+)
 
 log_NA = st.slider(
     "log10(NA) [cm⁻³]",
@@ -289,7 +308,15 @@ log_NA = st.slider(
     0.1
 )
 
+Ea_depth = st.slider(
+    "Acceptor level Ea - Ev (eV)",
+    0.03,
+    0.30,
+    0.045,
+    0.005
+)
+
 NA = 10 ** log_NA
 
-fig = plot_band(T_C, NA)
+fig = plot_band(T_C, NA, Ea_depth)
 st.pyplot(fig)
