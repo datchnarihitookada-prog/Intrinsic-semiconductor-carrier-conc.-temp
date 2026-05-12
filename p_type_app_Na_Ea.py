@@ -173,7 +173,7 @@ def plot_band(T_C, NA, Ea_depth):
 
     n_intrinsic_display = p_intrinsic_display
 
-    fig, ax = plt.subplots(figsize=(4.8, 6.2), dpi=120)
+    fig, ax = plt.subplots(figsize=(4.4, 6.2), dpi=120)
 
     ax.plot([0, 1], [Ec, Ec], 'k', linewidth=2)
     ax.plot([0, 1], [Ev, Ev], 'k', linewidth=2)
@@ -250,7 +250,7 @@ def plot_band(T_C, NA, Ea_depth):
         )
 
     ax.set_xlim(0, 1.15)
-    ax.set_ylim(-0.75, 0.75)
+    ax.set_ylim(-0.9, 0.75)
     ax.set_xticks([])
     ax.set_ylabel("Energy (eV)")
     ax.tick_params(axis='both', direction='in')
