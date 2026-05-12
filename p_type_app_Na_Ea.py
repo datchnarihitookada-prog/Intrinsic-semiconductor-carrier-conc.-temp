@@ -173,7 +173,7 @@ def plot_band(T_C, NA, Ea_depth):
 
     n_intrinsic_display = p_intrinsic_display
 
-    fig, ax = plt.subplots(figsize=(4.4, 6.2), dpi=120)
+    fig, ax = plt.subplots(figsize=(4.8, 5.0), dpi=120)
 
     ax.plot([0, 1], [Ec, Ec], 'k', linewidth=2)
     ax.plot([0, 1], [Ev, Ev], 'k', linewidth=2)
