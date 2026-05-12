@@ -30,10 +30,6 @@ def intrinsic_density(T):
 
 
 def acceptor_ionized_fraction(T, Ea_depth):
-    """
-    Arrhenius-type acceptor activation model.
-    Deeper acceptors are harder to ionize.
-    """
     if T <= 0:
         return 0.0
 
@@ -177,9 +173,8 @@ def plot_band(T_C, NA, Ea_depth):
 
     n_intrinsic_display = p_intrinsic_display
 
-    fig, ax = plt.subplots(figsize=(6.5, 8))
+    fig, ax = plt.subplots(figsize=(4.8, 6.2), dpi=120)
 
-    # Bands and levels
     ax.plot([0, 1], [Ec, Ec], 'k', linewidth=2)
     ax.plot([0, 1], [Ev, Ev], 'k', linewidth=2)
     ax.plot([0, 1], [E_A, E_A], '--', color='green', linewidth=1.5)
@@ -190,7 +185,6 @@ def plot_band(T_C, NA, Ea_depth):
     ax.text(1.03, E_A, "Ea", va="center", color="green")
     ax.text(1.03, Ef, "Ef", va="center", color="r")
 
-    # Acceptor-captured electrons
     if n_acceptor_bound_display > 0:
         y_a = sample_acceptor_level(T, n_acceptor_bound_display, E_A)
         x_a = np.random.uniform(0.18, 0.82, size=n_acceptor_bound_display)
@@ -202,7 +196,6 @@ def plot_band(T_C, NA, Ea_depth):
             label="Acceptor-captured electrons"
         )
 
-    # Acceptor-generated holes
     if p_acceptor_valence_display > 0:
         y_h_acc = sample_valence(T, p_acceptor_valence_display)
         x_h_acc = np.random.uniform(0.18, 0.82, size=p_acceptor_valence_display)
@@ -216,7 +209,6 @@ def plot_band(T_C, NA, Ea_depth):
             label="Acceptor-generated holes"
         )
 
-    # Intrinsic electrons
     if n_intrinsic_display > 0:
         y_e_int = sample_conduction(T, n_intrinsic_display)
         x_e_int = np.random.uniform(0.18, 0.82, size=n_intrinsic_display)
@@ -228,7 +220,6 @@ def plot_band(T_C, NA, Ea_depth):
             label="Intrinsic electrons"
         )
 
-    # Intrinsic holes
     if p_intrinsic_display > 0:
         y_h_int = sample_valence(T, p_intrinsic_display)
         x_h_int = np.random.uniform(0.18, 0.82, size=p_intrinsic_display)
@@ -242,7 +233,6 @@ def plot_band(T_C, NA, Ea_depth):
             label="Intrinsic holes"
         )
 
-    # Excitation arrows
     if p_acceptor_valence_display > 0:
         ax.annotate(
             "",
@@ -260,7 +250,7 @@ def plot_band(T_C, NA, Ea_depth):
         )
 
     ax.set_xlim(0, 1.15)
-    ax.set_ylim(-1.5, 1.5)
+    ax.set_ylim(-0.75, 0.75)
     ax.set_xticks([])
     ax.set_ylabel("Energy (eV)")
     ax.tick_params(axis='both', direction='in')
@@ -283,7 +273,7 @@ def plot_band(T_C, NA, Ea_depth):
 # -----------------------------
 st.title("p型半導体　パラメータ：T, Na, Ea")
 
-col1, col2 = st.columns([0.75, 3.25])
+col1, col2 = st.columns([1.0, 2.4])
 
 with col1:
     st.subheader("Controls")
@@ -324,7 +314,7 @@ with col2:
         frac_intrinsic
     ) = plot_band(T_C, NA, Ea_depth)
 
-    graph_col, info_col = st.columns([2.2, 1.0])
+    graph_col, info_col = st.columns([1.5, 1.0])
 
     with graph_col:
         st.pyplot(fig, use_container_width=True)
@@ -338,7 +328,7 @@ with col2:
 {T_C:.0f} °C  
 {T_C + 273.15:.2f} K  
 
-**NA**  
+**Na**  
 {NA:.2e} cm⁻³  
 
 **Ea - Ev**  
