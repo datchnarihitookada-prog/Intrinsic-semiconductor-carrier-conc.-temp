@@ -22,10 +22,12 @@ Nv_Si_300 = 1.04e19
 # Functions
 # -----------------------------
 def Nc_T(Nc_300, T):
+
     return Nc_300 * (T / 300.0) ** 1.5
 
 
 def Nv_T(Nv_300, T):
+
     return Nv_300 * (T / 300.0) ** 1.5
 
 
@@ -44,7 +46,7 @@ def intrinsic_density(T, Eg, Nc_300, Nv_300):
 def plot_intrinsic_density(Eg_other):
 
     # Temperature range
-    T = np.linspace(250, 2000, 2000)
+    T = np.linspace(250, 10000, 4000)
 
     # x-axis
     inv_T = 1000 / T
@@ -102,7 +104,7 @@ def plot_intrinsic_density(Eg_other):
 
     # Axis ranges
     ax.set_xlim(0.1, 4.0)
-    ax.set_ylim(1e7, 1e19)
+    ax.set_ylim(1e7, 1e20)
 
     # Tick style
     ax.tick_params(
@@ -182,17 +184,11 @@ Eg = {Eg_other:.2f} eV
 
 ---
 
-### Graph
+### Plot range
 
-x-axis : 1000 / T  
+x-axis : 0.1 → 4.0 K⁻¹  
 
-0.1 → 4.0 K⁻¹  
-
----
-
-y-axis : ni  
-
-10⁷ → 10¹⁹ cm⁻³  
+y-axis : 10⁷ → 10²⁰ cm⁻³  
 
 ---
 
