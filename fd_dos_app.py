@@ -10,8 +10,8 @@ st.set_page_config(layout="wide")
 k_B = 8.617e-5  # eV/K
 
 # Si-like effective density of states at 300 K
-Nc_300 = 2.8e19  # cm^-3
-Nv_300 = 1.04e19 # cm^-3
+Nc_300 = 2.8e19   # cm^-3
+Nv_300 = 1.04e19  # cm^-3
 
 
 # -----------------------------
@@ -45,10 +45,25 @@ def intrinsic_density(T, Eg):
     return np.sqrt(Nc * Nv) * np.exp(-Eg / (2 * k_B * T))
 
 
-def plot_dos_distribution(T, Eg):
+def carrier_densities_simple(T, Eg, Ef):
+    if T <= 0:
+        return 0.0, 0.0
+
     Ec = Eg / 2
     Ev = -Eg / 2
-    Ef = 0.0
+
+    Nc = Nc_T(T)
+    Nv = Nv_T(T)
+
+    n = Nc * np.exp(-(Ec - Ef) / (k_B * T))
+    p = Nv * np.exp(-(Ef - Ev) / (k_B * T))
+
+    return n, p
+
+
+def plot_dos_distribution(T, Eg, Ef):
+    Ec = Eg / 2
+    Ev = -Eg / 2
 
     # Energy range
     margin = 1.2
@@ -118,12 +133,31 @@ def plot_dos_distribution(T, Eg):
 
     fig.tight_layout()
 
-    # Important numerical values
     ni = intrinsic_density(T, Eg)
+    n, p = carrier_densities_simple(T, Eg, Ef)
+
     f_Ec = fermi_dirac(Ec, Ef, T)
     hole_Ev = 1.0 - fermi_dirac(Ev, Ef, T)
 
-    return fig, Ec, Ev, Ef, ni, f_Ec, hole_Ev
+    if Ef > 0.05:
+        semiconductor_type = "n-type-like"
+    elif Ef < -0.05:
+        semiconductor_type = "p-type-like"
+    else:
+        semiconductor_type = "intrinsic-like"
+
+    return (
+        fig,
+        Ec,
+        Ev,
+        Ef,
+        ni,
+        n,
+        p,
+        f_Ec,
+        hole_Ev,
+        semiconductor_type
+    )
 
 
 # -----------------------------
@@ -152,10 +186,29 @@ with col1:
         0.01
     )
 
+    Ef = st.slider(
+        "Fermi level Ef (eV)",
+        -1.0,
+        1.0,
+        0.0,
+        0.01
+    )
+
 with col2:
     T = T_C + 273.15
 
-    fig, Ec, Ev, Ef, ni, f_Ec, hole_Ev = plot_dos_distribution(T, Eg)
+    (
+        fig,
+        Ec,
+        Ev,
+        Ef,
+        ni,
+        n,
+        p,
+        f_Ec,
+        hole_Ev,
+        semiconductor_type
+    ) = plot_dos_distribution(T, Eg, Ef)
 
     graph_col, info_col = st.columns([1.5, 0.9])
 
@@ -174,6 +227,12 @@ with col2:
 **Bandgap Eg**  
 {Eg:.2f} eV  
 
+**Fermi level Ef**  
+{Ef:.3f} eV  
+
+**Type**  
+{semiconductor_type}
+
 ---
 
 **Band positions**
@@ -181,8 +240,6 @@ with col2:
 Ec = +{Ec:.3f} eV  
 
 Ev = {Ev:.3f} eV  
-
-Ef = {Ef:.3f} eV  
 
 ---
 
@@ -194,7 +251,11 @@ f(Ec) = {f_Ec:.3e}
 
 ---
 
-**Intrinsic carrier density**
+**Carrier density**
+
+n = {n:.3e} cm⁻³  
+
+p = {p:.3e} cm⁻³  
 
 ni = {ni:.3e} cm⁻³  
 """
