@@ -33,15 +33,28 @@ def intrinsic_density(T, Eg, Nc_300, Nv_300):
     Nc = Nc_T(Nc_300, T)
     Nv = Nv_T(Nv_300, T)
 
-    return np.sqrt(Nc * Nv) * np.exp(-Eg / (2 * k_B * T))
+    ni = np.sqrt(Nc * Nv) * np.exp(-Eg / (2 * k_B * T))
+
+    return ni
 
 
 def plot_intrinsic_density(Eg_material):
     T = np.linspace(250, 1200, 1000)  # K
     inv_T = 1000 / T
 
-    ni_Si = intrinsic_density(T, Eg_Si, Nc_Si_300, Nv_Si_300)
-    ni_material = intrinsic_density(T, Eg_material, Nc_Si_300, Nv_Si_300)
+    ni_Si = intrinsic_density(
+        T,
+        Eg_Si,
+        Nc_Si_300,
+        Nv_Si_300
+    )
+
+    ni_material = intrinsic_density(
+        T,
+        Eg_material,
+        Nc_Si_300,
+        Nv_Si_300
+    )
 
     fig, ax = plt.subplots(figsize=(5.2, 4.0), dpi=120)
 
@@ -59,14 +72,16 @@ def plot_intrinsic_density(Eg_material):
         label=f"Material: Eg = {Eg_material:.2f} eV"
     )
 
-    ax.set_xlabel("1000 / T (K⁻¹)", fontsize=11)
-    ax.set_ylabel("Intrinsic carrier density ni (cm⁻³)", fontsize=11)
+    ax.set_xlabel("1000 / T (K⁻¹)")
+    ax.set_ylabel("Intrinsic carrier density ni (cm⁻³)")
 
-    ax.set_xlim(4.0, 0.8)
+    # 重要：反転しない
+    # 左：高温、右：低温
+    ax.set_xlim(0.8, 4.0)
     ax.set_ylim(1e-12, 1e19)
 
-    ax.tick_params(axis="both", direction="in", labelsize=10)
-    ax.legend(fontsize=9, loc="upper left")
+    ax.tick_params(axis="both", direction="in")
+    ax.legend(fontsize=9, loc="upper right")
     ax.grid(False)
 
     fig.tight_layout()
@@ -126,5 +141,7 @@ y-axis: ni
 左側：高温  
 
 右側：低温  
+
+右に行くほど ni は低下します。
 """
     )
