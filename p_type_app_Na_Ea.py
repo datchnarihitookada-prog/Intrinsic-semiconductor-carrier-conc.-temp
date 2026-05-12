@@ -182,11 +182,11 @@ def plot_band(T_C, NA, Ea_depth):
 
     # Band and level labels
     # Band and level labels
-   ax.text(1.03, Ec + 0.035, "Ec", va="bottom")
-   ax.text(1.03, Ev - 0.035, "Ev", va="top")
-   ax.text(1.03, E_A + 0.020, "Ea", va="bottom", color="green")
-   # Ef label
-   ax.text(1.02, Ef - 0.001, "Ef", va="top", color="r")
+    ax.text(1.03, Ec + 0.035, "Ec", va="bottom")
+    ax.text(1.03, Ev - 0.035, "Ev", va="top")
+    ax.text(1.03, E_A + 0.020, "Ea", va="bottom", color="green")
+    # Ef label
+    ax.text(1.02, Ef - 0.001, "Ef", va="top", color="r")
 
     if n_acceptor_bound_display > 0:
         y_a = sample_acceptor_level(T, n_acceptor_bound_display, E_A)
