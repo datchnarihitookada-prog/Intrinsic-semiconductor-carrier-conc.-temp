@@ -45,7 +45,7 @@ def intrinsic_density(T, Eg):
     return np.sqrt(Nc * Nv) * np.exp(-Eg / (2 * k_B * T))
 
 
-def carrier_densities_simple(T, Eg, Ef):
+def carrier_densities(T, Eg, Ef):
     if T <= 0:
         return 0.0, 0.0
 
@@ -55,25 +55,26 @@ def carrier_densities_simple(T, Eg, Ef):
     Nc = Nc_T(T)
     Nv = Nv_T(T)
 
+    # Non-degenerate approximation
     n = Nc * np.exp(-(Ec - Ef) / (k_B * T))
     p = Nv * np.exp(-(Ef - Ev) / (k_B * T))
 
     return n, p
 
 
-def plot_dos_distribution(T, Eg, Ef):
+def plot_distribution(T, Eg, Ef):
     Ec = Eg / 2
     Ev = -Eg / 2
 
-    # Energy range
     margin = 1.2
     E_min = Ev - margin
     E_max = Ec + margin
-    E = np.linspace(E_min, E_max, 4000)
+
+    E = np.linspace(E_min, E_max, 5000)
 
     f = fermi_dirac(E, Ef, T)
 
-    # Simplified 3D density of states shape
+    # 3D-like DOS shape
     gc = np.zeros_like(E)
     gv = np.zeros_like(E)
 
@@ -84,12 +85,17 @@ def plot_dos_distribution(T, Eg, Ef):
     electron_dist = gc * f
     hole_dist = gv * (1.0 - f)
 
-    # Normalize only for visualization
-    max_val = max(np.max(electron_dist), np.max(hole_dist), 1e-30)
+    # Normalize for visualization
+    max_val = max(
+        np.max(electron_dist),
+        np.max(hole_dist),
+        1e-30
+    )
+
     electron_dist_norm = electron_dist / max_val
     hole_dist_norm = hole_dist / max_val
 
-    fig, ax = plt.subplots(figsize=(5.6, 4.4), dpi=120)
+    fig, ax = plt.subplots(figsize=(5.8, 4.4), dpi=120)
 
     ax.plot(
         E,
@@ -102,7 +108,7 @@ def plot_dos_distribution(T, Eg, Ef):
         E,
         electron_dist_norm,
         linewidth=2,
-        label="Electron distribution: DOS × f(E)"
+        label="Electron density distribution"
     )
 
     ax.plot(
@@ -110,20 +116,19 @@ def plot_dos_distribution(T, Eg, Ef):
         hole_dist_norm,
         linewidth=2,
         linestyle="--",
-        label="Hole distribution: DOS × [1 - f(E)]"
+        label="Hole density distribution"
     )
 
-    # Band edges and Fermi level
-    ax.axvline(Ec, linestyle="--", linewidth=1.5)
     ax.axvline(Ev, linestyle="--", linewidth=1.5)
     ax.axvline(Ef, linestyle="--", linewidth=1.5)
+    ax.axvline(Ec, linestyle="--", linewidth=1.5)
 
-    ax.text(Ec + 0.02, 0.92, "Ec")
     ax.text(Ev + 0.02, 0.92, "Ev")
     ax.text(Ef + 0.02, 0.50, "Ef")
+    ax.text(Ec + 0.02, 0.92, "Ec")
 
     ax.set_xlabel("Energy E (eV)")
-    ax.set_ylabel("Probability / normalized distribution")
+    ax.set_ylabel("Probability / normalized density")
 
     ax.set_xlim(E_min, E_max)
     ax.set_ylim(-0.03, 1.05)
@@ -134,7 +139,7 @@ def plot_dos_distribution(T, Eg, Ef):
     fig.tight_layout()
 
     ni = intrinsic_density(T, Eg)
-    n, p = carrier_densities_simple(T, Eg, Ef)
+    n, p = carrier_densities(T, Eg, Ef)
 
     f_Ec = fermi_dirac(Ec, Ef, T)
     hole_Ev = 1.0 - fermi_dirac(Ev, Ef, T)
@@ -163,7 +168,7 @@ def plot_dos_distribution(T, Eg, Ef):
 # -----------------------------
 # Streamlit UI
 # -----------------------------
-st.title("フェルミ分布 × 状態密度によるキャリア分布")
+st.title("フェルミ分布 × 状態密度による電子・正孔分布")
 
 col1, col2 = st.columns([0.8, 1.8])
 
@@ -208,7 +213,7 @@ with col2:
         f_Ec,
         hole_Ev,
         semiconductor_type
-    ) = plot_dos_distribution(T, Eg, Ef)
+    ) = plot_distribution(T, Eg, Ef)
 
     graph_col, info_col = st.columns([1.5, 0.9])
 
@@ -258,5 +263,15 @@ n = {n:.3e} cm⁻³
 p = {p:.3e} cm⁻³  
 
 ni = {ni:.3e} cm⁻³  
+
+---
+
+**Visualization**
+
+Electron distribution  
+= DOS × f(E)  
+
+Hole distribution  
+= DOS × [1 - f(E)]  
 """
         )
