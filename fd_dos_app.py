@@ -104,19 +104,33 @@ def plot_distribution(T, Eg, Ef):
         label="Fermi-Dirac f(E)"
     )
 
+    # Electron density distribution
     ax.plot(
-        E,
-        electron_dist_norm,
-        linewidth=2,
-        label="Electron density distribution"
+    E,
+    electron_dist_norm,
+    linewidth=2,
+    label="Electron density distribution"
     )
 
+    ax.fill_between(
+    E,
+    electron_dist_norm,
+    alpha=0.30
+    )
+
+    # Hole density distribution
     ax.plot(
-        E,
-        hole_dist_norm,
-        linewidth=2,
-        linestyle="--",
-        label="Hole density distribution"
+    E,
+    hole_dist_norm,
+    linewidth=2,
+    linestyle="--",
+    label="Hole density distribution"
+    )
+
+    ax.fill_between(
+    E,
+    hole_dist_norm,
+    alpha=0.25
     )
 
     ax.axvline(Ev, linestyle="--", linewidth=1.5)
