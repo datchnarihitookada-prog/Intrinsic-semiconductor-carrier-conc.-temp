@@ -120,11 +120,11 @@ with col1:
     )
 
     Eg = st.slider(
-        "Bandgap Eg (eV)",
-        0.1,
-        5.0,
-        1.1,
-        0.01
+    "Bandgap Eg (eV)",
+    0.1,
+    3.0,
+    1.1,
+    0.01
     )
 
     Ef = st.slider(
