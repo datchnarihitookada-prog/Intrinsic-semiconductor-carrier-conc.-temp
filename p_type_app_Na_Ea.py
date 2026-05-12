@@ -181,11 +181,12 @@ def plot_band(T_C, NA, Ea_depth):
     ax.plot([0, 1], [Ef, Ef], 'r--', linewidth=1.5)
 
     # Band and level labels
-    ax.text(1.02, Ec + 0.02, "Ec", va="bottom")
-    ax.text(1.02, Ev - 0.02, "Ev", va="top")
-    ax.text(1.02, E_A + 0.020, "Ea", va="bottom", color="green")
-    # Ef label: 少し右にずらして、Ea/Evと重なりにくくする
-    ax.text(1.02, Ef - 0.001, "Ef", va="top", color="r")
+    # Band and level labels
+   ax.text(1.03, Ec + 0.035, "Ec", va="bottom")
+   ax.text(1.03, Ev - 0.035, "Ev", va="top")
+   ax.text(1.03, E_A + 0.020, "Ea", va="bottom", color="green")
+   # Ef label
+   ax.text(1.02, Ef - 0.001, "Ef", va="top", color="r")
 
     if n_acceptor_bound_display > 0:
         y_a = sample_acceptor_level(T, n_acceptor_bound_display, E_A)
