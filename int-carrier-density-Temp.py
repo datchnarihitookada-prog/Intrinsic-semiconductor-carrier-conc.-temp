@@ -30,10 +30,13 @@ def Nv_T(Nv_300, T):
 
 
 def intrinsic_density(T, Eg, Nc_300, Nv_300):
+
     Nc = Nc_T(Nc_300, T)
     Nv = Nv_T(Nv_300, T)
 
-    ni = np.sqrt(Nc * Nv) * np.exp(-Eg / (2 * k_B * T))
+    ni = np.sqrt(Nc * Nv) * np.exp(
+        -Eg / (2 * k_B * T)
+    )
 
     return ni
 
@@ -41,7 +44,7 @@ def intrinsic_density(T, Eg, Nc_300, Nv_300):
 def plot_intrinsic_density(Eg_material):
 
     # Temperature range
-    T = np.linspace(250, 1200, 1000)  # K
+    T = np.linspace(250, 2000, 2000)
 
     # x-axis
     inv_T = 1000 / T
@@ -65,7 +68,10 @@ def plot_intrinsic_density(Eg_material):
     # -----------------------------
     # Plot
     # -----------------------------
-    fig, ax = plt.subplots(figsize=(5.4, 4.1), dpi=120)
+    fig, ax = plt.subplots(
+        figsize=(5.6, 4.2),
+        dpi=120
+    )
 
     ax.semilogy(
         inv_T,
@@ -84,8 +90,15 @@ def plot_intrinsic_density(Eg_material):
     )
 
     # Axis labels
-    ax.set_xlabel("1000 / T (K⁻¹)", fontsize=11)
-    ax.set_ylabel("Intrinsic carrier density ni (cm⁻³)", fontsize=11)
+    ax.set_xlabel(
+        "1000 / T (K⁻¹)",
+        fontsize=11
+    )
+
+    ax.set_ylabel(
+        "Intrinsic carrier density ni (cm⁻³)",
+        fontsize=11
+    )
 
     # Axis ranges
     ax.set_xlim(0.5, 4.0)
@@ -173,7 +186,13 @@ Eg = {Eg_material:.2f} eV
 
 x-axis : 1000 / T  
 
+0.5 → 4.0 K⁻¹  
+
+---
+
 y-axis : ni  
+
+10⁷ → 10¹⁹ cm⁻³  
 
 ---
 
