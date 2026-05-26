@@ -1,295 +1,87 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import streamlit as st
-
-st.set_page_config(layout="wide")
-
-# -----------------------------
-# Constants
-# -----------------------------
-k_B = 8.617e-5  # eV/K
-
-# Si-like effective density of states at 300 K
-Nc_300 = 2.8e19   # cm^-3
-Nv_300 = 1.04e19  # cm^-3
-
-
-# -----------------------------
-# Functions
-# -----------------------------
-def fermi_dirac(E, Ef, T):
-    if T <= 0:
-        return np.where(E < Ef, 1.0, 0.0)
-
-    x = (E - Ef) / (k_B * T)
-    x = np.clip(x, -700, 700)
-
-    return 1.0 / (1.0 + np.exp(x))
-
-
-def Nc_T(T):
-    return Nc_300 * (T / 300.0) ** 1.5
-
-
-def Nv_T(T):
-    return Nv_300 * (T / 300.0) ** 1.5
-
-
-def intrinsic_density(T, Eg):
-    if T <= 0:
-        return 0.0
-
-    Nc = Nc_T(T)
-    Nv = Nv_T(T)
-
-    return np.sqrt(Nc * Nv) * np.exp(-Eg / (2 * k_B * T))
-
-
-def carrier_densities(T, Eg, Ef):
-    if T <= 0:
-        return 0.0, 0.0
-
-    Ec = Eg / 2
-    Ev = -Eg / 2
-
-    Nc = Nc_T(T)
-    Nv = Nv_T(T)
-
-    # Non-degenerate approximation
-    n = Nc * np.exp(-(Ec - Ef) / (k_B * T))
-    p = Nv * np.exp(-(Ef - Ev) / (k_B * T))
-
-    return n, p
-
-
-def plot_distribution(T, Eg, Ef):
-    Ec = Eg / 2
-    Ev = -Eg / 2
-
-    margin = 1.2
-    E_min = Ev - margin
-    E_max = Ec + margin
-
-    E = np.linspace(E_min, E_max, 5000)
-
-    f = fermi_dirac(E, Ef, T)
-
-    # 3D-like DOS shape
-    gc = np.zeros_like(E)
-    gv = np.zeros_like(E)
-
-    gc[E >= Ec] = np.sqrt(E[E >= Ec] - Ec)
-    gv[E <= Ev] = np.sqrt(Ev - E[E <= Ev])
-
-    # Electron and hole distributions
-    electron_dist = gc * f
-    hole_dist = gv * (1.0 - f)
-
-    # Normalize for visualization
-    max_val = max(
-        np.max(electron_dist),
-        np.max(hole_dist),
-        1e-30
-    )
-
-    electron_dist_norm = electron_dist / max_val
-    hole_dist_norm = hole_dist / max_val
-
-    fig, ax = plt.subplots(figsize=(5.8, 4.4), dpi=120)
-
-    ax.plot(
-        E,
-        f,
-        linewidth=2,
-        label="Fermi-Dirac f(E)"
-    )
-
-    # Electron density distribution
-    ax.plot(
-    E,
-    electron_dist_norm,
-    linewidth=2,
-    color="blue",
-    label="Electron density distribution"
-    )
-
-    ax.fill_between(
-    E,
-    electron_dist_norm,
-    color="blue",
-    alpha=0.25
-    )
-
-    # Hole density distribution
-    ax.plot(
-    E,
-    hole_dist_norm,
-    linewidth=2,
-    linestyle="--",
-    color="red",
-    label="Hole density distribution"
-    )
-
-    ax.fill_between(
-    E,
-    hole_dist_norm,
-    color="red",
-    alpha=0.25
-    )
-
-    ax.axvline(Ev, linestyle="--", linewidth=1.5)
-    ax.axvline(Ef, linestyle="--", linewidth=1.5)
-    ax.axvline(Ec, linestyle="--", linewidth=1.5)
-
-    ax.text(Ev + 0.02, 0.92, "Ev")
-    ax.text(Ef + 0.02, 0.50, "Ef")
-    ax.text(Ec + 0.02, 0.92, "Ec")
-
-    ax.set_xlabel("Energy E (eV)")
-    ax.set_ylabel("Probability / normalized density")
-
-    ax.set_xlim(E_min, E_max)
-    ax.set_ylim(-0.03, 1.05)
-
-    ax.tick_params(axis="both", direction="in")
-    ax.legend(fontsize=8)
-
-    fig.tight_layout()
-
-    ni = intrinsic_density(T, Eg)
-    n, p = carrier_densities(T, Eg, Ef)
-
-    f_Ec = fermi_dirac(Ec, Ef, T)
-    hole_Ev = 1.0 - fermi_dirac(Ev, Ef, T)
-
-    if Ef > 0.05:
-        semiconductor_type = "n-type-like"
-    elif Ef < -0.05:
-        semiconductor_type = "p-type-like"
-    else:
-        semiconductor_type = "intrinsic-like"
-
-    return (
-        fig,
-        Ec,
-        Ev,
-        Ef,
-        ni,
-        n,
-        p,
-        f_Ec,
-        hole_Ev,
-        semiconductor_type
-    )
-
-
-# -----------------------------
-# Streamlit UI
-# -----------------------------
-st.title("フェルミ分布 × 状態密度による電子・正孔分布")
-
-col1, col2 = st.columns([0.8, 1.8])
-
-with col1:
-    st.subheader("Controls")
-
-    T_C = st.slider(
-        "Temperature (°C)",
-        -273,
-        1000,
-        25,
-        1
-    )
-
-    Eg = st.slider(
-        "Bandgap Eg (eV)",
-        0.1,
-        3.0,
-        1.1,
-        0.01
-    )
-
-    Ef = st.slider(
-        "Fermi level Ef (eV)",
-        -1.0,
-        1.0,
-        0.0,
-        0.01
-    )
-
-with col2:
-    T = T_C + 273.15
-
-    (
-        fig,
-        Ec,
-        Ev,
-        Ef,
-        ni,
-        n,
-        p,
-        f_Ec,
-        hole_Ev,
-        semiconductor_type
-    ) = plot_distribution(T, Eg, Ef)
-
-    graph_col, info_col = st.columns([1.5, 0.9])
-
-    with graph_col:
-        st.pyplot(fig, use_container_width=True)
-
-    with info_col:
-        st.subheader("Parameters")
-
-        st.markdown(
-            f"""
-**Temperature**  
-{T_C:.0f} °C  
-{T:.2f} K  
-
-**Bandgap Eg**  
-{Eg:.2f} eV  
-
-**Fermi level Ef**  
-{Ef:.3f} eV  
-
-**Type**  
-{semiconductor_type}
-
----
-
-**Band positions**
-
-Ec = +{Ec:.3f} eV  
-
-Ev = {Ev:.3f} eV  
-
----
-
-**Band-edge occupation**
-
-f(Ec) = {f_Ec:.3e}  
-
-1 - f(Ev) = {hole_Ev:.3e}  
-
----
-
-**Carrier density**
-
-n = {n:.3e} cm⁻³  
-
-p = {p:.3e} cm⁻³  
-
-ni = {ni:.3e} cm⁻³  
-
----
-
-**Visualization**
-
-Electron distribution  
-= DOS × f(E)  
-
-Hole distribution  
-= DOS × [1 - f(E)]  
-"""
-        )
+from matplotlib.widgets import Slider
+
+# --- 半導体材料の物理パラメータ設定 ---
+KBOLTZ = 8.617e-5
+
+# [シリコン (Si)]
+NC_VAL = 280.0 * 1e17   # 2.8e19 cm^-3
+NV_VAL = 10.4 * 1e18    # 1.04e19 cm^-3
+
+
+# 初期パラメータ
+t_start, g_start, f_start = 25.0, 1.10, 0.00
+
+window, plot_ax = plt.subplots(figsize=(11, 5.5))
+plt.subplots_adjust(bottom=0.25, right=0.6)
+
+def run_simulation(celsius, gap, fermi):
+    kelvin = max(celsius + 273.15, 0.01)
+    ec, ev = gap / 2.0, -gap / 2.0
+    v_axis = np.linspace(ev - 1.2, ec + 1.2, 1500)
+    
+    # 統計関数とDOS計算
+    f_stat = 1.0 / (1.0 + np.exp(np.clip((v_axis - fermi) / (KBOLTZ * kelvin), -700, 700)))
+    carrier_e = np.where(v_axis >= ec, np.sqrt(v_axis - ec), 0.0) * f_stat
+    carrier_h = np.where(v_axis <= ev, np.sqrt(ev - v_axis), 0.0) * (1.0 - f_stat)
+    scale = max(np.max(carrier_e), np.max(carrier_h), 1e-30)
+    
+    # 物理濃度の評価
+    f_ec = 1.0 / (1.0 + np.exp(np.clip((ec - fermi) / (KBOLTZ * kelvin), -700, 700)))
+    f_ev = 1.0 - 1.0 / (1.0 + np.exp(np.clip((ev - fermi) / (KBOLTZ * kelvin), -700, 700)))
+    nc_t, nv_t = NC_VAL * (kelvin / 300.0)**1.5, NV_VAL * (kelvin / 300.0)**1.5
+    
+    n_density = nc_t * np.exp(-(ec - fermi) / (KBOLTZ * kelvin)) if kelvin > 0 else 0
+    p_density = nv_t * np.exp(-(fermi - ev) / (KBOLTZ * kelvin)) if kelvin > 0 else 0
+    ni_density = np.sqrt(nc_t * nv_t) * np.exp(-gap / (2 * KBOLTZ * kelvin)) if kelvin > 0 else 0
+    
+    return v_axis, f_stat, carrier_e/scale, carrier_h/scale, ec, ev, kelvin, f_ec, f_ev, n_density, p_density, ni_density
+
+# 画面生成
+v_x, f_d, en, hn, ec, ev, kv, fc, hv, n, p, ni = run_simulation(t_start, g_start, f_start)
+line_f, = plot_ax.plot(v_x, f_d, linewidth=2, label="Fermi-Dirac f(E)", color="#4a4a4a")
+line_e, = plot_ax.plot(v_x, en, linewidth=2, color="#00cbd6", label="Electron density")
+line_h, = plot_ax.plot(v_x, hn, linewidth=2, linestyle="--", color="#ff7f0e", label="Hole density")
+fill_e = plot_ax.fill_between(v_x, en, color="#00cbd6", alpha=0.2)
+fill_h = plot_ax.fill_between(v_x, hn, color="#ff7f0e", alpha=0.2)
+
+v_ev = plot_ax.axvline(ev, linestyle=":", color="#7f8c8d")
+v_ef = plot_ax.axvline(f_start, linestyle="-.", color="#2980b9")
+v_ec = plot_ax.axvline(ec, linestyle=":", color="#7f8c8d")
+lbl_ev, lbl_ef, lbl_ec = plot_ax.text(ev+0.02, 0.92, "Ev"), plot_ax.text(f_start+0.02, 0.50, "Ef"), plot_ax.text(ec+0.02, 0.92, "Ec")
+display_txt = plot_ax.text(1.1, 1.0, "", transform=plot_ax.transAxes, va='top', fontname='monospace', fontsize=10)
+
+def draw_sidebar(tc, tk, eg, ef, ec, ev, fc, hv, n, p, ni):
+    semi_class = "n-type-like" if ef > 0.05 else ("p-type-like" if ef < -0.05 else "intrinsic-like")
+    display_txt.set_text(f" [ Parameters ]\n Temp : {tc:.0f} C ({tk:.2f} K)\n Eg   : {eg:.2f} eV\n Ef   : {ef:.3f} eV\n Type : {semi_class}\n\n"
+                          f" [ Band positions ]\n Ec = +{ec:.3f} eV\n Ev = {ev:.3f} eV\n\n"
+                          f" [ Occupation ]\n f(Ec)     = {fc:.3e}\n 1 - f(Ev) = {hv:.3e}\n\n"
+                          f" [ Carrier density ]\n n  = {n:.3e} cm^-3\n p  = {p:.3e} cm^-3\n ni = {ni:.3e} cm^-3")
+
+plot_ax.set_ylabel("Probability / normalized density")
+plot_ax.set_ylim(-0.03, 1.05)
+plot_ax.legend(loc="upper left", fontsize=8)
+plot_ax.grid(True, alpha=0.2)
+
+# スライダ
+sld_T = Slider(plt.axes([0.15, 0.14, 0.4, 0.025]), "Temp (C)", -273.0, 1000.0, valinit=t_start, valstep=1)
+sld_g = Slider(plt.axes([0.15, 0.09, 0.4, 0.025]), "Eg (eV)", 0.10, 3.00, valinit=g_start, valstep=0.01)
+sld_f = Slider(plt.axes([0.15, 0.04, 0.4, 0.025]), "Ef (eV)", -1.00, 1.00, valinit=f_start, valstep=0.01)
+
+def refresh_view(v):
+    global fill_e, fill_h
+    v_x, f_d, en, hn, ec, ev, kv, fc, hv, n, p, ni = run_simulation(sld_T.val, sld_g.val, sld_f.val)
+    line_f.set_data(v_x, f_d); line_e.set_data(v_x, en); line_h.set_data(v_x, hn)
+    v_ev.set_xdata([ev, ev]); v_ef.set_xdata([sld_f.val, sld_f.val]); v_ec.set_xdata([ec, ec])
+    lbl_ev.set_x(ev+0.02); lbl_ef.set_x(sld_f.val+0.02); lbl_ec.set_x(ec+0.02)
+    fill_e.remove(); fill_h.remove()
+    fill_e = plot_ax.fill_between(v_x, en, color="#00cbd6", alpha=0.2)
+    fill_h = plot_ax.fill_between(v_x, hn, color="#ff7f0e", alpha=0.2)
+    plot_ax.set_xlim(ev - 1.2, ec + 1.2)
+    draw_sidebar(sld_T.val, kv, sld_g.val, sld_f.val, ec, ev, fc, hv, n, p, ni)
+    window.canvas.draw_idle()
+
+sld_T.on_changed(refresh_view); sld_g.on_changed(refresh_view); sld_f.on_changed(refresh_view)
+draw_sidebar(t_start, t_start+273.15, g_start, f_start, ec, ev, fc, hv, n, p, ni)
+plt.show()
