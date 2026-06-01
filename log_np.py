@@ -15,7 +15,7 @@ kB = 8.617333262e-5  # eV/K
 def calculate(Eg, Ea, Na_user):
     Na = max(Na_user, 1.0)
 
-    T = np.linspace(50, 2273.15, 1500)
+    T = np.linspace(1, 2273.15, 1500)
 
     Nv = Nv300 * (T / 300) ** 1.5
     Nc = Nc300 * (T / 300) ** 1.5
