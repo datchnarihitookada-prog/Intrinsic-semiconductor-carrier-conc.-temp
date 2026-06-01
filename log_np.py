@@ -91,19 +91,23 @@ ax.plot(
 ax.set_xlabel("1/T (K$^{-1}$)", fontsize=14)
 ax.set_ylabel("log p (cm$^{-3}$)", fontsize=14)
 
-ax.set_xlim(0.00001, 0.012)
+ax.set_xlim(0.0001, 0.012)
+ax.set_ylim(10, 20)
+
+ax.tick_params(direction="in", labelsize=12)
+
 # -------------------------
 # 上軸 温度(K)
 # -------------------------
-
 def invT_to_K(x):
     x = np.asarray(x)
     x = np.where(x <= 0, np.nan, x)
     return 1 / x
 
-def K_to_invT(T):
-    T = np.asarray(T)
-    return 1 / T
+def K_to_invT(tempK):
+    tempK = np.asarray(tempK)
+    tempK = np.where(tempK <= 0, np.nan, tempK)
+    return 1 / tempK
 
 secax = ax.secondary_xaxis(
     "top",
@@ -113,44 +117,18 @@ secax = ax.secondary_xaxis(
 secax.set_xlabel("Temperature (K)", fontsize=14)
 
 secax.set_xticks([
-    -200,
-    -100,
-    0,
     100,
     200,
     300,
     500,
     1000,
-    1500
-])
-
-secax.tick_params(direction="in", labelsize=12)
-
-secax.set_xlabel("Temperature (°C)", fontsize=14)
-
-secax.set_xticks([
-    0,
-    200,
-    400,
-    600,
-    1000,
-    1500
-])
-
-secax.tick_params(direction="in", labelsize=12)
-
-secax.set_xlabel("Temperature (°C)", fontsize=14)
-
-secax.set_xticks([
-    0,
-    200,
-    400,
-    600,
-    800,
-    1000,
     1500,
     2000
 ])
+
+secax.tick_params(direction="in", labelsize=12)
+
+st.pyplot(fig)
 
 secax.tick_params(
     direction='in',
