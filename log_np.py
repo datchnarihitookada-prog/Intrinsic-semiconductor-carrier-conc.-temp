@@ -130,10 +130,8 @@ secax.set_xticks([
     200,
     400,
     600,
-    800,
     1000,
-    1500,
-    2000
+    1500
 ])
 
 secax.tick_params(direction="in", labelsize=12)
