@@ -15,7 +15,7 @@ kB = 8.617333262e-5  # eV/K
 def calculate(Eg, Ea, Na_user):
     Na = max(Na_user, 1.0)
 
-    T = np.linspace(50, 1500, 1000)
+    T = np.linspace(50, 2273.15, 1500)
 
     Nv = Nv300 * (T / 300) ** 1.5
     Nc = Nc300 * (T / 300) ** 1.5
@@ -67,7 +67,7 @@ Ea = st.sidebar.slider(
 
 logNa = st.sidebar.slider(
     "log10(Na)",
-    min_value=0.0,
+    min_value=13.0,
     max_value=20.0,
     value=14.0,
     step=0.1
