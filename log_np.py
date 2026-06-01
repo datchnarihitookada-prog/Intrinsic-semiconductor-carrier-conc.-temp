@@ -92,6 +92,38 @@ ax.set_xlabel("1/T (K$^{-1}$)", fontsize=14)
 ax.set_ylabel("log p (cm$^{-3}$)", fontsize=14)
 
 ax.set_xlim(0, 0.012)
+# -------------------------
+# 上軸 温度(℃)
+# -------------------------
+
+def invT_to_C(x):
+    return 1 / x - 273.15
+
+def C_to_invT(c):
+    return 1 / (c + 273.15)
+
+secax = ax.secondary_xaxis(
+    'top',
+    functions=(invT_to_C, C_to_invT)
+)
+
+secax.set_xlabel("Temperature (°C)", fontsize=14)
+
+secax.set_xticks([
+    0,
+    200,
+    400,
+    600,
+    800,
+    1000,
+    1500,
+    2000
+])
+
+secax.tick_params(
+    direction='in',
+    labelsize=12
+)
 ax.set_ylim(10, 20) 
 ax.tick_params(direction="in", labelsize=12)
 
