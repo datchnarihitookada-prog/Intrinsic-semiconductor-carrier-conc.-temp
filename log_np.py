@@ -122,7 +122,6 @@ secax.set_xticks([
     300,
     500,
     1000,
-    1500,
     2000
 ])
 
@@ -136,8 +135,6 @@ secax.tick_params(
 )
 ax.set_ylim(10, 20) 
 ax.tick_params(direction="in", labelsize=12)
-
-st.pyplot(fig)
 
 # =====================================
 # 数値表示
