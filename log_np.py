@@ -113,12 +113,15 @@ secax = ax.secondary_xaxis(
 secax.set_xlabel("Temperature (K)", fontsize=14)
 
 secax.set_xticks([
+    -200,
+    -100,
+    0,
+    100,
+    200,
     300,
     500,
-    800,
     1000,
-    1500,
-    2000
+    1500
 ])
 
 secax.tick_params(direction="in", labelsize=12)
