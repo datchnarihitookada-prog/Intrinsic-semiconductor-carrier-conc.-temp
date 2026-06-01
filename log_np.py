@@ -91,7 +91,7 @@ ax.plot(
 ax.set_xlabel("1/T (K$^{-1}$)", fontsize=14)
 ax.set_ylabel("log p (cm$^{-3}$)", fontsize=14)
 
-ax.set_xlim(0, 0.012)
+ax.set_xlim(0, 0.02)
 ax.set_ylim(0, 23) 
 ax.tick_params(direction="in", labelsize=12)
 
