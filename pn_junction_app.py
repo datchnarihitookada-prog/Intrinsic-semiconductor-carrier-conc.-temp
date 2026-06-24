@@ -2,7 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="PN Junction Dynamic Simulation",
+    layout="centered"
+)
 
 # ==========================================
 # 1. パラメータ設定
@@ -24,20 +27,20 @@ W_dep_history = np.zeros(Nt)
 
 Ec_p_side = 0.5
 
-for step in range(Nt):
-    progress = step / (Nt - 1)
+for step_i in range(Nt):
+    progress_i = step_i / (Nt - 1)
 
-    if progress < 0.1:
+    if progress_i < 0.1:
         W_dep = 0.0
         curr_v = 0.0
         ef_weight = 0.0
     else:
-        p = (progress - 0.1) / 0.9
+        p = (progress_i - 0.1) / 0.9
         W_dep = 0.25 * p
         curr_v = V_delta * p
         ef_weight = p
 
-    W_dep_history[step] = W_dep
+    W_dep_history[step_i] = W_dep
     Ec = np.zeros(Nx)
 
     for i, pos in enumerate(x):
@@ -60,9 +63,9 @@ for step in range(Nt):
     Ef_n = (Ec_p_side - V_delta) - 0.25
     Ef = np.where(x < 0, Ef_p, Ef_n * (1 - ef_weight) + Ef_p * ef_weight)
 
-    Ec_history[step] = Ec
-    Ev_history[step] = Ev
-    Ef_history[step] = Ef
+    Ec_history[step_i] = Ec
+    Ev_history[step_i] = Ev
+    Ef_history[step_i] = Ef
 
 # ==========================================
 # 3. キャリア配置
@@ -192,25 +195,48 @@ for i in range(num_min):
 # ==========================================
 # 6. Matplotlib描画
 # ==========================================
-fig, ax = plt.subplots(figsize=(11, 7))
+fig, ax = plt.subplots(figsize=(7.2, 4.8), dpi=120)
 
-ax.plot(x, Ec_curr, color="darkblue", lw=4, label="Conduction Band (Ec)")
-ax.plot(x, Ev_curr, color="darkred", lw=4, label="Valence Band (Ev)")
+ax.plot(x, Ec_curr, color="darkblue", lw=3, label="Conduction Band (Ec)")
+ax.plot(x, Ev_curr, color="darkred", lw=3, label="Valence Band (Ev)")
 ax.plot(x, Ef_curr, color="green", linestyle="--", lw=2, label="Fermi Level (Ef)")
 
 if W_dep > 0:
     ax.axvspan(-W_dep, W_dep, color="lightgray", alpha=0.25, label="Depletion Region")
-    ax.axvline(-W_dep, color="gray", linestyle=":", lw=1.5)
-    ax.axvline(W_dep, color="gray", linestyle=":", lw=1.5)
+    ax.axvline(-W_dep, color="gray", linestyle=":", lw=1.2)
+    ax.axvline(W_dep, color="gray", linestyle=":", lw=1.2)
 
-ax.scatter(part_x_elec, part_y_elec, color="blue", s=60, alpha=0.8, zorder=5, label="Electron")
-ax.scatter(part_x_hole, part_y_hole, color="red", s=60, alpha=0.8, zorder=5, label="Hole")
+ax.scatter(
+    part_x_elec,
+    part_y_elec,
+    color="blue",
+    s=35,
+    alpha=0.8,
+    zorder=5,
+    label="Electron"
+)
+
+ax.scatter(
+    part_x_hole,
+    part_y_hole,
+    color="red",
+    s=35,
+    alpha=0.8,
+    zorder=5,
+    label="Hole"
+)
 
 ax.set_xlim(-1.0, 1.0)
 ax.set_ylim(-2.2, 1.3)
-ax.set_xlabel("Position", fontsize=11)
-ax.set_ylabel("Energy [eV]", fontsize=11)
-ax.grid(True, linestyle=":", alpha=0.5)
-ax.legend(loc="lower left", framealpha=0.9)
 
-st.pyplot(fig)
+ax.set_xlabel("Position", fontsize=10)
+ax.set_ylabel("Energy [eV]", fontsize=10)
+
+ax.tick_params(labelsize=9)
+ax.grid(True, linestyle=":", alpha=0.5)
+ax.legend(loc="lower left", framealpha=0.9, fontsize=8)
+
+fig.tight_layout()
+
+st.pyplot(fig, use_container_width=False)
+plt.close(fig)
