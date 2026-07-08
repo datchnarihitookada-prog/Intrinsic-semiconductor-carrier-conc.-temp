@@ -3,31 +3,32 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import streamlit as st
 
-# =========================
-# Streamlit設定
-# =========================
-st.set_page_config(page_title="pn接合 空乏層シミュレーター", layout="wide")
+# =========================================================
+# Streamlit settings
+# =========================================================
+st.set_page_config(
+    page_title="pn Junction Simulator",
+    layout="wide"
+)
 
-st.title("pn接合の不純物分布・電荷分布・電位分布")
+st.title("pn Junction Simulator")
+st.caption("Impurity distribution, space-charge distribution, and potential distribution")
 
-# =========================
-# 日本語文字化け対策
-# =========================
-mpl.rcParams["font.family"] = "Yu Gothic"  # ダメなら "Meiryo"
+# Avoid garbled minus signs in matplotlib
 mpl.rcParams["axes.unicode_minus"] = False
 
-# =========================
-# x軸
-# =========================
+# =========================================================
+# Spatial coordinate
+# =========================================================
 x = np.linspace(-5, 5, 2000)
 
-# =========================
-# サイドバー：スライダー
-# =========================
-st.sidebar.header("パラメータ")
+# =========================================================
+# Sidebar controls
+# =========================================================
+st.sidebar.header("Parameters")
 
 log_Na = st.sidebar.slider(
-    "log10(Na)",
+    "log10(NA): acceptor density",
     min_value=14.0,
     max_value=18.0,
     value=16.0,
@@ -35,7 +36,7 @@ log_Na = st.sidebar.slider(
 )
 
 log_Nd = st.sidebar.slider(
-    "log10(Nd)",
+    "log10(ND): donor density",
     min_value=14.0,
     max_value=18.0,
     value=16.0,
@@ -45,22 +46,27 @@ log_Nd = st.sidebar.slider(
 Na = 10 ** log_Na
 Nd = 10 ** log_Nd
 
-# =========================
-# 計算関数
-# =========================
-def calc(Na, Nd):
-    W = 3.5
+# =========================================================
+# Calculation function
+# =========================================================
+def calc(Na: float, Nd: float):
+    """Calculate normalized impurity, charge, and potential profiles."""
 
-    # 電荷中性条件：Na*xp = Nd*xn
-    xp = W * Nd / (Na + Nd)   # p側空乏層幅
-    xn = W * Na / (Na + Nd)   # n側空乏層幅
+    W = 3.5  # total depletion width in arbitrary units
 
+    # Charge neutrality condition: NA*xp = ND*xn
+    xp = W * Nd / (Na + Nd)   # depletion width on p-side
+    xn = W * Na / (Na + Nd)   # depletion width on n-side
+
+    # Impurity distribution: acceptor is negative, donor is positive
     impurity = np.where(x < 0, -Na, Nd)
 
+    # Space-charge distribution in the depletion region
     charge = np.zeros_like(x)
     charge[(x >= -xp) & (x < 0)] = -Na
     charge[(x >= 0) & (x <= xn)] = Nd
 
+    # Potential profile obtained by integrating the charge distribution twice
     V = np.zeros_like(x)
 
     mask_p = (x >= -xp) & (x < 0)
@@ -75,6 +81,7 @@ def calc(Na, Nd):
     Vmax = V0 + Na * xp * xn - 0.5 * Nd * xn ** 2
     V[mask_r] = Vmax
 
+    # Normalize for visualization
     scale = max(Na, Nd)
     impurity = impurity / scale
     charge = charge / scale
@@ -84,18 +91,18 @@ def calc(Na, Nd):
 
     return impurity, charge, V, xp, xn
 
-# =========================
-# 計算
-# =========================
+# =========================================================
+# Run calculation
+# =========================================================
 impurity, charge, V, xp, xn = calc(Na, Nd)
 
-# =========================
-# 状態表示
-# =========================
+# =========================================================
+# Numerical information
+# =========================================================
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Na", f"{Na:.2e} cm⁻³")
-col2.metric("Nd", f"{Nd:.2e} cm⁻³")
+col1.metric("Acceptor Density NA", f"{Na:.2e} cm^-3")
+col2.metric("Donor Density ND", f"{Nd:.2e} cm^-3")
 
 if Nd < Na:
     relation = r"$N_D < N_A$"
@@ -108,35 +115,30 @@ col3.markdown(f"### {relation}")
 
 st.markdown(
     rf"""
-    電荷中性条件：
+Charge neutrality condition:
 
-    \[
-    N_A x_p = N_D x_n
-    \]
+$$
+N_A x_p = N_D x_n
+$$
 
-    現在の空乏層幅比：
+Current depletion widths:
 
-    \[
-    x_p = {xp:.2f}, \quad x_n = {xn:.2f}
-    \]
-    """
+$$
+x_p = {xp:.2f}, \qquad x_n = {xn:.2f}
+$$
+"""
 )
 
-# =========================
+# =========================================================
 # Figure
-# =========================
+# =========================================================
 fig, axes = plt.subplots(3, 1, figsize=(9, 9), sharex=True)
 fig.subplots_adjust(hspace=0.55)
 
 ax1, ax2, ax3 = axes
 
-# =========================
-# 描画
-# =========================
+# Impurity distribution
 ax1.step(x, impurity, where="post", color="deepskyblue", lw=3)
-ax2.step(x, charge, where="post", color="blue", lw=3)
-ax3.plot(x, V, color="deepskyblue", lw=3)
-
 ax1.fill_between(
     x, 0, impurity,
     where=x < 0,
@@ -144,7 +146,6 @@ ax1.fill_between(
     color="deepskyblue",
     alpha=0.25
 )
-
 ax1.fill_between(
     x, 0, impurity,
     where=x >= 0,
@@ -153,6 +154,8 @@ ax1.fill_between(
     alpha=0.25
 )
 
+# Space-charge distribution
+ax2.step(x, charge, where="post", color="blue", lw=3)
 ax2.fill_between(
     x, 0, charge,
     where=(x >= -xp) & (x < 0),
@@ -160,7 +163,6 @@ ax2.fill_between(
     color="blue",
     alpha=0.45
 )
-
 ax2.fill_between(
     x, 0, charge,
     where=(x >= 0) & (x <= xn),
@@ -169,7 +171,10 @@ ax2.fill_between(
     alpha=0.45
 )
 
-# 空乏層境界線
+# Potential distribution
+ax3.plot(x, V, color="deepskyblue", lw=3)
+
+# Depletion region boundaries
 for ax in axes:
     ax.axvline(-xp, color="gray", ls="--", lw=1)
     ax.axvline(0, color="black", lw=1.5)
@@ -179,17 +184,15 @@ for ax in axes:
     ax.set_yticks([])
     ax.grid(False)
 
-# =========================
-# 軸設定
-# =========================
-ax1.set_title("(a) 不純物分布", fontsize=14)
-ax2.set_title("(b) 電荷分布", fontsize=14)
-ax3.set_title("(c) 電位分布", fontsize=14)
+# Axis settings
+ax1.set_title("(a) Impurity Distribution", fontsize=14)
+ax2.set_title("(b) Space-Charge Distribution", fontsize=14)
+ax3.set_title("(c) Potential Distribution", fontsize=14)
 
-ax1.set_ylabel("不純物濃度", fontsize=13)
-ax2.set_ylabel("Q", fontsize=13)
-ax3.set_ylabel("V", fontsize=13)
-ax3.set_xlabel("x", fontsize=13)
+ax1.set_ylabel("Impurity", fontsize=13)
+ax2.set_ylabel("Charge", fontsize=13)
+ax3.set_ylabel("Potential", fontsize=13)
+ax3.set_xlabel("Position x", fontsize=13)
 
 ax1.set_ylim(-1.3, 1.3)
 ax2.set_ylim(-1.3, 1.3)
@@ -203,33 +206,38 @@ ax1.text(
     fontsize=18
 )
 
-# =========================
-# Streamlit表示
-# =========================
 st.pyplot(fig)
 
-# =========================
-# 説明
-# =========================
+# Close figure to avoid memory accumulation during reruns
+plt.close(fig)
+
+# =========================================================
+# Explanation
+# =========================================================
 st.markdown(
-    """
-    ### 見方
+    r"""
+### Description
 
-    - 上段：不純物分布  
-      p側はアクセプタなので負、n側はドナーなので正として表示しています。
+**Top panel: Impurity distribution**
 
-    - 中段：空乏層内の電荷分布  
-      空乏層では自由キャリアが消え、イオン化アクセプタ・イオン化ドナーだけが残ります。
+The p-side is represented by the acceptor density, while the n-side is represented by the donor density.
+The acceptor side is shown as negative and the donor side as positive for visualization.
 
-    - 下段：電位分布  
-      ポアソン方程式により、空乏層内では電荷分布に対応して電位が曲がります。
+**Middle panel: Space-charge distribution**
 
-    ### 重要なポイント
+Inside the depletion region, mobile carriers are removed. Therefore, only ionized acceptors and ionized donors remain.
+This fixed ion charge forms the space-charge region.
 
-    \[
-    N_A x_p = N_D x_n
-    \]
+**Bottom panel: Potential distribution**
 
-    なので、濃度が高い側ほど空乏層幅は狭くなります。
-    """
+The potential profile is determined by Poisson's equation. The curvature of the potential reflects the charge density in the depletion region.
+
+### Key relation
+
+$$
+N_A x_p = N_D x_n
+$$
+
+A higher doping concentration results in a narrower depletion width on that side.
+"""
 )
